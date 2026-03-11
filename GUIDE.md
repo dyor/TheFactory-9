@@ -1,18 +1,18 @@
 ## Project Overview
 Factory-9 is a Kotlin Multiplatform application. It helps KMP App Builders accomplish streamlining the creation and publication of YouTube Short educational videos about the app.
 Aesthetic: Film noir-classic old school movie theme.
-Core Architecture: Kotlin Multiplatform (Android, iOS), Jetpack Compose / Compose Multiplatform, Room, Ktor, Koin, Coil, Jetpack Navigation 3, Calf permissions.
+Core Architecture: Kotlin Multiplatform (Android, iOS), Jetpack Compose / Compose Multiplatform, Room, Ktor, Koin, Coil, Compose Navigation 3, Calf permissions.
 
 ## Phase 1: Foundation & Infrastructure
 Goal: Initialize the stack and establish core dependencies.
 
 ### Step 1: Project Setup
 - [x] **User Action**: Run `git init`.
-- [x] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Jetpack Navigation 3, Calf permissions).
+- [x] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Compose Navigation 3, Calf permissions).
 - [x] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
-- [ ] **Agent Action**: Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and `build.gradle.kts`. This project ONLY targets Android and iOS.
-- [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Desktop, web, and wasm targets removed"`.
-- [ ] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
+- [x] **Agent Action**: Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and `build.gradle.kts`. This project ONLY targets Android and iOS.
+- [x] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Desktop, web, and wasm targets removed"`.
+- [x] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
 - [ ] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
 - [ ] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
 - [ ] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
@@ -26,7 +26,7 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 - [ ] **Validation**: Run unit tests for Data layer.
 
 ### Step 2: Main User Interface
-- [ ] **Agent Action**: Implement Jetpack Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives. 
+- [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
 - [ ] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens. 
 - [ ] **Validation**: Manual testing of UI states.
 

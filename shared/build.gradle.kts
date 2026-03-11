@@ -21,8 +21,6 @@ kotlin {
         }
     }
     
-    jvm()
-    
     androidLibrary {
        namespace = "org.example.project.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -58,7 +56,7 @@ kotlin {
             implementation(libs.sqlite.bundled)
             
             // Navigation
-            implementation(libs.navigation.compose)
+            implementation(libs.jetbrains.navigation3.ui)
         
             // Ktor
             implementation(libs.ktor.client.core)

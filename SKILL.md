@@ -33,7 +33,7 @@ This document captures key learnings and patterns for working with this KMP code
         1.  Define ViewModel: `class MyVM : ViewModel()`.
         2.  Call in Compose: `val vm = viewModel { MyVM() }`.
 *   **Navigation**:
-    *   **Experimental**: Jetpack Navigation 3 recently announced support for KMP.
+    *   **Rule**: Use **Navigation 3** (`org.jetbrains.androidx.navigation3:navigation3-ui`). Do NOT use older `navigation-compose` artifacts as they cause linkage errors on iOS.
     *   **If That Fails Use**: Simple state-based navigation (`var screen by remember { mutableStateOf(...) }`).
 *   **Permissions**:
     *   **Rule**: Use `com.mohamedrejeb.calf:calf-permissions` (Calf) for handling permissions in KMP. It is much more reliable and integrates better with Koin and standard Compose Multiplatform than older libraries like Moko.

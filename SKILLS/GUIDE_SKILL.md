@@ -28,14 +28,14 @@ Use Markdown checkboxes as bulleted lists to track state, which ensures they ren
 ## Project Overview
 [App Name: default: Factory] is a [Architecture: default=MVVM] application. It helps [Target Audience: default=App Builders] accomplish [Core Problem: create YouTube shorts for their apps].
 Aesthetic: [Visual Theme: default=based off film_noir.png]
-Core Architecture: [default=Kotlin Multiplatform (Android, iOS), Compose, Room, Jetpack Navigation 3, Calf Permissions]
+Core Architecture: [default=Kotlin Multiplatform (Android, iOS), Compose, Room, Compose Navigation 3, Calf Permissions]
 
 ## Phase 1: Foundation & Infrastructure
 Goal: Initialize the stack and establish core dependencies.
 
 ### Step 1: Project Setup
 - [ ] **User Action**: Run `git init`.
-- [ ] **Agent Action**: Configure `build.gradle.kts` with required dependencies.
+- [ ] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Compose Navigation 3, Calf permissions).
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
 - [ ] **Agent Action**: Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and `build.gradle.kts`. This project ONLY targets Android and iOS.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Desktop, web, and wasm targets removed"`.
@@ -53,7 +53,7 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 - [ ] **Validation**: Run unit tests for Data layer.
 
 ### Step 2: Main User Interface
-- [ ] **Agent Action**: Implement Jetpack Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives. 
+- [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
 - [ ] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens. 
 - [ ] **Validation**: Manual testing of UI states.
 
