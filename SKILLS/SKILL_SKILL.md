@@ -81,16 +81,17 @@ This document captures key learnings and patterns for working with this KMP code
 *   **`libs.versions.toml` formatting**: ALWAYS use hyphens (`-`) for library names instead of camelCase in the `[libraries]` and `[plugins]` block to remain consistent and avoid "Unresolved reference" errors during Gradle sync.
 *   **Android Target Configuration in KMP**: When using the `com.android.kotlin.multiplatform.library` plugin (which is modern), do NOT use a standalone `android { ... }` block in `shared/build.gradle.kts`. Instead, configure the android specifics directly within the `androidLibrary { ... }` block inside the `kotlin { ... }` block. Ensure you set the `jvmTarget` inside `compilerOptions`.
 
-*   **Target Hygiene**: Only include platforms in `kotlin { ... }` blocks that are fully supported by your dependencies.
-    *   **Rule**: **We ONLY target Android and iOS in this project.** Do NOT add `jvm()`, `desktop`, `js`, or `wasmJs` targets, as this will break dependency resolution for the whole project.
+*   **Target Hygiene (CRITICAL FIRST STEP)**: 
+    *   **Rule**: If a project ONLY targets Android and iOS, you MUST immediately remove `jvm()`, `js {}`, and `wasmJs {}` blocks from `shared/build.gradle.kts`, delete their corresponding source sets (`jsMain`, `wasmJsMain`, `jvmMain`), and remove desktop/web apps from `settings.gradle.kts`. Failing to do this will cause dependency resolution to fail violently when adding mobile-only or mobile-specific KMP libraries.
 
 *   **Version Catalog**: Update `gradle/libs.versions.toml` frequently but verify compatibility between Kotlin, Compose Multiplatform, and AndroidX libraries. Use `./gradlew :shared:assemble` to quickly check dependency resolution.
 
 #### Room KMP Database Initialization (CRITICAL & CORRECTED)
 *   **Problem**: Encountering `kotlin.IllegalStateException: Cannot find the associated androidx.room.RoomDatabaseConstructor` or `Cannot create a RoomDatabase without providing a SQLiteDriver via setDriver()` on iOS.
 *   **Solution**: For Room 2.7.0+ in KMP, you must rely on KSP to generate the constructor for non-Android platforms, but you configure the driver via standard factory functions.
-    *   **Gradle Setup (Crucial)**: KSP *must* be applied to every target utilizing the database in `shared/build.gradle.kts`. Do not forget iOS!
+    *   **Gradle Setup (Crucial)**: KSP *must* be applied to every target utilizing the database in `shared/build.gradle.kts`. Do not forget iOS! You must also declare a schema directory.
         ```kotlin
+        room { schemaDirectory("src/commonMain/room/schemas") }
         dependencies {
             add("kspAndroid", libs.androidx.room.compiler)
             add("kspIosArm64", libs.androidx.room.compiler)
