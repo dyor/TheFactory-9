@@ -13,8 +13,8 @@ Goal: Initialize the stack and establish core dependencies.
 - [x] **Agent Action**: Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and `build.gradle.kts`. This project ONLY targets Android and iOS.
 - [x] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Desktop, web, and wasm targets removed"`.
 - [x] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
-- [ ] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
-- [ ] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
+- [x] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
+- [x] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
 - [ ] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
 
 ## Phase 2: Core Features & Logic
