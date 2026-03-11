@@ -9,7 +9,7 @@ Goal: Initialize the stack and establish core dependencies.
 ### Step 1: Project Setup
 - [x] **User Action**: Run `git init`.
 - [x] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Jetpack Navigation 3, Calf permissions).
-- [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
+- [x] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
 - [ ] **Agent Action**: Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and `build.gradle.kts`. This project ONLY targets Android and iOS.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Desktop, web, and wasm targets removed"`.
 - [ ] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
