@@ -16,6 +16,7 @@ Goal: Initialize the stack and establish core dependencies.
 - [x] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
 - [x] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
 - [x] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 1 completion.
 
 ## Phase 2: Core Features & Logic
 Goal: Implement the primary business logic, integrations (e.g., AI interop), and local database.
@@ -29,6 +30,7 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 - [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
 - [ ] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens. 
 - [ ] **Validation**: Manual testing of UI states.
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 2 completion.
 
 ## Phase 3: Hardware / Native Integrations (Production)
 Goal: Implement device-specific features (Camera, Audio, Location, etc.).
@@ -55,6 +57,7 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 ### Step 2.3: YouTube Integration
 - [ ] **Agent Action**: Provide an option to publish the video on YouTube shorts. It is ok to use simple shortcuts - like saving this video to the native Photo app and opening YouTube (where the user can upload the video from their native Photo app). 
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Publishing Studio complete"`
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 3 completion.
 
 ## Phase 4: The Final Cut (Cleanup & Optimization)
 Goal: Polish, optimize, and prepare for production.
@@ -64,3 +67,4 @@ Goal: Polish, optimize, and prepare for production.
 - [ ] **Agent Action**: Remove or minimize debug logging.
 - [ ] **User Action**: Full regression test of the application.
 - [ ] **Validation**: `git add . && git commit -m "Phase 4: Final Cut"`
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect 100% completion.

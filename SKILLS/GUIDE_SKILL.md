@@ -34,6 +34,8 @@ Core Architecture: [default=Kotlin Multiplatform (Android, iOS), Compose, Room, 
 Goal: Initialize the stack and establish core dependencies.
 
 ### Step 1: Project Setup
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` before starting to track baseline progress.
+- [ ] **User Action**: Change the Android Studio project view from "Android View" to "Project View" using the dropdown in the top-left of the Project tool window. This is required to see all KMP directories like `shared` and `iosApp`.
 - [ ] **User Action**: Run `git init`.
 - [ ] **Agent Action**: Purge extraneous targets. Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and the `kotlin { }` block in `shared/build.gradle.kts`. Delete their respective directories (`desktopApp/`, `webApp/`, `shared/src/jsMain/`, etc.). Clean up extraneous run configurations from `.idea/workspace.xml` and `.idea/runConfigurations/`. This project ONLY targets Android and iOS.
 - [ ] **User Action**: Open `iosApp/iosApp.xcodeproj` in Xcode. Navigate to the `iosApp` target -> 'Signing & Capabilities' tab and configure the development 'Team'. This prevents obscure iOS compiler linkage errors later.
@@ -44,6 +46,7 @@ Goal: Initialize the stack and establish core dependencies.
 - [ ] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
 - [ ] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
 - [ ] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 1 completion.
 
 ## Phase 2: Core Features & Logic
 Goal: Implement the primary business logic, integrations (e.g., AI interop), and local database.
@@ -57,6 +60,7 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 - [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
 - [ ] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens. 
 - [ ] **Validation**: Manual testing of UI states.
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 2 completion.
 
 ## Phase 3: Hardware / Native Integrations (Production)
 Goal: Implement device-specific features (Camera, Audio, Location, etc.).
@@ -83,7 +87,7 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 ### Step 2.1: YouTube Integration
 - [ ] **Agent Action**: Provide an option to publish the video on YouTube shorts. It is ok to use simple shortcuts - like saving this video to the native Photo app and opening YouTube (where the user can upload the video from their native Photo app). 
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Publishing Studio complete"`
-
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 3 completion.
 
 ## Phase 4: The Final Cut (Cleanup & Optimization)
 Goal: Polish, optimize, and prepare for production.
@@ -93,6 +97,7 @@ Goal: Polish, optimize, and prepare for production.
 - [ ] **Agent Action**: Remove or minimize debug logging.
 - [ ] **User Action**: Full regression test of the application.
 - [ ] **Validation**: `git add . && git commit -m "Phase 4: Final Cut"`
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect 100% completion.
 ```
 
 ## Execution Protocol
@@ -108,3 +113,4 @@ When the User says "Execute" or "Continue with the GUIDE.md":
     - Stop execution.
     - Prompt the User with specific instructions on what they need to do manually.
     - Wait for the User to confirm completion before continuing.
+5. Periodically, at the end of a session or after major milestones, run the instructions in `SKILLS/CALCULATOR_SKILL.md` to update the `CALCULATOR.md` file and keep progress tracking up to date.

@@ -112,6 +112,8 @@ This document captures key learnings and patterns for working with this KMP code
         *   **iOS specific**: You must explicitly call `.setDriver(BundledSQLiteDriver())` on the builder.
 
 #### Troubleshooting & IDE Caching
+*   **Problem**: Not seeing all the code modules, or project files look broken.
+*   **Solution**: **Ensure Android Studio project view is changed from "Android View" to "Project View"** using the dropdown in the top-left of the Project tool window. This is required to see all KMP directories like `shared` and `iosApp`.
 *   **Problem**: Newly added resources (e.g., images in `composeResources`) are not found at runtime (causing `MissingResourceException`), or stubborn dependency/build issues persist despite correct configuration.
 *   **Solution**: Android Studio and Gradle caches can get out of sync, especially in KMP projects. 
     1. Run a clean build (`./gradlew clean assembleDebug`).
