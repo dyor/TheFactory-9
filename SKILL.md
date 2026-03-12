@@ -87,8 +87,9 @@ This document captures key learnings and patterns for working with this KMP code
 #### Room KMP Database Initialization (CRITICAL & CORRECTED)
 *   **Problem**: Encountering `kotlin.IllegalStateException: Cannot find the associated androidx.room.RoomDatabaseConstructor` or `Cannot create a RoomDatabase without providing a SQLiteDriver via setDriver()` on iOS.
 *   **Solution**: For Room 2.7.0+ in KMP, you must rely on KSP to generate the constructor for non-Android platforms, but you configure the driver via standard factory functions.
-    *   **Gradle Setup (Crucial)**: KSP *must* be applied to every target utilizing the database in `shared/build.gradle.kts`. Do not forget iOS!
+    *   **Gradle Setup (Crucial)**: KSP *must* be applied to every target utilizing the database in `shared/build.gradle.kts`. Do not forget iOS! You must also declare a schema directory.
         ```kotlin
+        room { schemaDirectory("src/commonMain/room/schemas") }
         dependencies {
             add("kspAndroid", libs.androidx.room.compiler)
             add("kspIosArm64", libs.androidx.room.compiler)
