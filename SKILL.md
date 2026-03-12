@@ -125,3 +125,8 @@ This document captures key learnings and patterns for working with this KMP code
     4.  User Action: Select the `iosApp` target -> go to the **Signing & Capabilities** tab.
     5.  User Action: Configure the "Team" (select the Apple Developer team).
 *   **Rule**: If iOS builds fail mysteriously, stop and explicitly ask the user to open Xcode to diagnose the real issue and fix signing.
+
+#### iOS Deployment Troubleshooting
+*   **Problem**: Deployment fails with the error `The developer disk image could not be mounted on this device.`
+*   **Solution**: The run configuration is currently pointing to a physical iPhone that is either disconnected or locked. 
+    *   **User Action**: Change the deployment target in Android Studio / Xcode to a running iOS Simulator, or ensure the physical device is plugged in and unlocked.
