@@ -15,13 +15,13 @@ Goal: Initialize the stack and establish core dependencies.
 - [x] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
 - [x] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
 - [x] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
-- [ ] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
+- [x] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
 
 ## Phase 2: Core Features & Logic
 Goal: Implement the primary business logic, integrations (e.g., AI interop), and local database.
 
 ### Step 1: Data Models & Persistence
-- [ ] **Agent Action**: Implement base Entities, DAOs, and Database config with Room. 
+- [x] **Agent Action**: Implement base Entities, DAOs, and Database config with Room.
 - [ ] **Agent Action**: Create unit tests for Data Layer.
 - [ ] **Validation**: Run unit tests for Data layer.
 
