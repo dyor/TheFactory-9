@@ -1,32 +1,21 @@
 package org.example.project.data.local
 
-import android.content.Context
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import kotlinx.coroutines.Dispatchers
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import kotlin.test.Test
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 
-@RunWith(AndroidJUnit4::class)
-class AndroidScriptDaoInstrumentedTest : ScriptDaoTest() {
+class IosScriptDaoTest : ScriptDaoTest() {
+
     private lateinit var database: AppDatabase
     private lateinit var scriptDao: ScriptDao
 
-    @Before
+    @BeforeTest
     fun setup() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-            .setDriver(BundledSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.IO)
-            .build()
+        database = getInMemoryDatabase()
         scriptDao = database.scriptDao()
     }
 
-    @After
+    @AfterTest
     fun tearDown() {
         database.close()
     }

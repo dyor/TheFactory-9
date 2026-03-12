@@ -3,30 +3,20 @@ package org.example.project.data.local
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.example.project.domain.model.Script
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
+
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+expect fun getInMemoryDatabase(): AppDatabase
+
 open class ScriptDaoTest {
 
-    protected lateinit var database: AppDatabase
-    protected lateinit var scriptDao: ScriptDao
 
-    @BeforeTest
-    open fun setup() {
-        // Database setup will be handled in platform-specific instrumented tests
-    }
 
-    @AfterTest
-    open fun tearDown() {
-        // Database teardown will be handled in platform-specific instrumented tests
-    }
 
-    @Test
-    fun insertAndGetScript_shouldReturnSameScript() = runTest {
+
+    open fun insertAndGetScript_shouldReturnSameScript(database: AppDatabase, scriptDao: ScriptDao) = runTest {
         val script = Script(
             title = "Test Video",
             content = "This is a test script.",
@@ -42,8 +32,7 @@ open class ScriptDaoTest {
         assertEquals("This is a test script.", retrievedScript.content)
     }
 
-    @Test
-    fun updateScript_shouldReflectChanges() = runTest {
+    open fun updateScript_shouldReflectChanges(database: AppDatabase, scriptDao: ScriptDao) = runTest {
         val script = Script(
             title = "Original Title",
             content = "Original Content",
@@ -59,8 +48,7 @@ open class ScriptDaoTest {
         assertEquals(true, newlyRetrievedScript?.isRecorded)
     }
 
-    @Test
-    fun deleteScript_shouldRemoveFromDatabase() = runTest {
+    open fun deleteScript_shouldRemoveFromDatabase(database: AppDatabase, scriptDao: ScriptDao) = runTest {
         val script = Script(
             title = "To be deleted",
             content = "Content",
@@ -75,8 +63,7 @@ open class ScriptDaoTest {
         assertNull(deletedScript)
     }
 
-    @Test
-    fun getAllScripts_shouldReturnOrderedList() = runTest {
+    open fun getAllScripts_shouldReturnOrderedList(database: AppDatabase, scriptDao: ScriptDao) = runTest {
         val script1 = Script(title = "First", content = "", createdAt = 1000L)
         val script2 = Script(title = "Second", content = "", createdAt = 2000L)
         
