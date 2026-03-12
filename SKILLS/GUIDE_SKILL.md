@@ -36,7 +36,8 @@ Goal: Initialize the stack and establish core dependencies.
 ### Step 1: Project Setup
 - [ ] **User Action**: Run `git init`.
 - [ ] **Agent Action**: Purge extraneous targets. Remove `desktopApp`, `jvm`, `webApp`, `js`, and `wasmJs` references from `settings.gradle.kts` and the `kotlin { }` block in `shared/build.gradle.kts`. Delete their respective directories (`desktopApp/`, `webApp/`, `shared/src/jsMain/`, etc.). Clean up extraneous run configurations from `.idea/workspace.xml` and `.idea/runConfigurations/`. This project ONLY targets Android and iOS.
-- [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Extraneous targets removed"`.
+- [ ] **User Action**: Open `iosApp/iosApp.xcodeproj` in Xcode. Navigate to the `iosApp` target -> 'Signing & Capabilities' tab and configure the development 'Team'. This prevents obscure iOS compiler linkage errors later.
+- [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Extraneous targets removed and iOS signing configured"`.
 - [ ] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Compose Navigation 3, Calf permissions). Only do this AFTER targets have been purged.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
 - [ ] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.

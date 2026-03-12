@@ -113,3 +113,14 @@ This document captures key learnings and patterns for working with this KMP code
 *   **Solution**: Android Studio and Gradle caches can get out of sync, especially in KMP projects. 
     1. Run a clean build (`./gradlew clean assembleDebug`).
     2. If that fails, go to **File -> Invalidate Caches... -> Check 'Clear file system cache and Local History' -> Invalidate and Restart**.
+
+#### iOS Build & Xcode Troubleshooting (CRITICAL)
+*   **Problem**: You get vague Kotlin iOS linkage or compilation errors (e.g., `linkDebugFrameworkIosSimulatorArm64` fails, `Cannot infer a bundle ID`, etc.) and running Gradle commands or grepping errors doesn't give a clear reason.
+*   **Solution**: The issue is often native Xcode configuration, most commonly missing Provisioning Profiles or Team Signing. **Do not randomly execute gradle commands to diagnose iOS native errors.**
+*   **Steps to Fix**:
+    1.  Stop the agent execution and ask the User to open the project natively.
+    2.  User Action: Right-click the `iosApp/iosApp` folder and select "Open in Finder" (or navigate via terminal).
+    3.  User Action: Double-click `iosApp.xcodeproj` to open it in Xcode.
+    4.  User Action: Select the `iosApp` target -> go to the **Signing & Capabilities** tab.
+    5.  User Action: Configure the "Team" (select the Apple Developer team).
+*   **Rule**: If iOS builds fail mysteriously, stop and explicitly ask the user to open Xcode to diagnose the real issue and fix signing.
