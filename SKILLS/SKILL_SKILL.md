@@ -69,6 +69,10 @@ This document captures key learnings and patterns for working with this KMP code
     *   **Rule**: Ensure file extensions match the actual file content (e.g., do not name a JPEG file `.png`). This can cause runtime decoding errors.
 
 ### Gradle & Build Logic
+#### Running Gradle Tasks (CRITICAL AI INSTRUCTION)
+*   **Rule**: **NEVER** use the raw shell command `run_shell_command("./gradlew ...")` to execute Gradle builds, tests, or syncs unless strictly necessary for a very specific low-level reason. It often hangs, loses buffer output, and causes daemon lockups. 
+*   **Solution**: **ALWAYS** use the dedicated IDE `gradle_build` tool (e.g. `gradle_build(commandLine = "assembleDebug")`) or `gradle_sync` tool. This integrates directly with the IDE's build system and provides clean, structured output and error reporting.
+
 #### Golden Set Versions
 *   **AGP (Android Gradle Plugin)**: `9.0.0`
 *   **Kotlin**: `2.3.20-Beta2`
