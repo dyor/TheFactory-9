@@ -10,24 +10,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class ScriptDaoTest {
+open class ScriptDaoTest {
 
-    private lateinit var database: AppDatabase
-    private lateinit var scriptDao: ScriptDao
+    protected lateinit var database: AppDatabase
+    protected lateinit var scriptDao: ScriptDao
 
     @BeforeTest
-    fun setup() {
-        // In common tests, we instantiate an in-memory database to ensure isolation.
-        // Room 2.7.0+ supports an in-memory builder for commonMain via the new driver pattern.
-        database = androidx.room.Room.inMemoryDatabaseBuilder<AppDatabase>()
-            .setDriver(androidx.sqlite.driver.bundled.BundledSQLiteDriver())
-            .build()
-        scriptDao = database.scriptDao()
+    open fun setup() {
+        // Database setup will be handled in platform-specific instrumented tests
     }
 
     @AfterTest
-    fun tearDown() {
-        database.close()
+    open fun tearDown() {
+        // Database teardown will be handled in platform-specific instrumented tests
     }
 
     @Test

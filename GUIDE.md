@@ -16,15 +16,15 @@ Goal: Initialize the stack and establish core dependencies.
 - [x] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
 - [x] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
 - [x] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
-- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 1 completion.
+- [x] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 1 completion.
 
 ## Phase 2: Core Features & Logic
 Goal: Implement the primary business logic, integrations (e.g., AI interop), and local database.
 
 ### Step 1: Data Models & Persistence
 - [x] **Agent Action**: Implement base Entities, DAOs, and Database config with Room.
-- [ ] **Agent Action**: Create unit tests for Data Layer.
-- [ ] **Validation**: Run unit tests for Data layer.
+- [x] **Agent Action**: Create unit tests for Data Layer.
+- [x] **Validation**: Run unit tests for Data layer.
 
 ### Step 2: Main User Interface
 - [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.

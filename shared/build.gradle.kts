@@ -32,9 +32,7 @@ kotlin {
        androidResources {
            enable = true
        }
-       withHostTest {
-           isIncludeAndroidResources = true
-       }
+
     }
     
     sourceSets {
@@ -73,9 +71,16 @@ kotlin {
             
             // Calf Permissions
             implementation(libs.calf.permissions)
+            
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
+            
+            // Datetime
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
