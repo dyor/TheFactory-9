@@ -53,7 +53,7 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 
 ### Step 1: Data Models & Persistence
 - [ ] **Agent Action**: Implement base Entities, DAOs, and Database config with Room. 
-- [ ] **Agent Action**: Create unit tests for Data Layer.
+- [ ] **Agent Action**: Create unit tests for Data Layer (Note: For Room KMP, implement these as Android Instrumented tests and iOS simulator tests, avoid Robolectric).
 - [ ] **Validation**: Run unit tests for Data layer.
 
 ### Step 2: Main User Interface

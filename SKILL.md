@@ -45,6 +45,29 @@ This document captures key learnings and patterns for working with this KMP code
     *   **Usage**: Ensure you have `import kotlin.time.Clock` and explicitly `import kotlin.time.Instant` in data classes. Use `@OptIn(ExperimentalTime::class)` where needed.
     *   **Note on `Instant` Deprecation Warning**: If `kotlinx.datetime.Instant` must be used (e.g., in Room `TypeConverters` because it provides necessary `.fromEpochMilliseconds()` methods while `kotlin.time` versions are still stabilizing in KMP), suppress the resulting typealias deprecation warning with `@Suppress("DEPRECATION")` directly on the `Converters` class.
 
+### Database Testing (Room KMP)
+*   **Best Practice**: Separate common test logic from platform-specific setup to avoid `kotlin.test` lifecycle issues with `lateinit` properties.
+*   **Common Test Class (`shared/src/commonTest/kotlin/.../YourDaoTest.kt`):**
+    *   Create an `open class` (e.g., `open class ScriptDaoTest`).
+    *   **NO `@Test` annotations** on the methods.
+    *   Test methods should accept dependencies as parameters: `open fun testInsertion(database: AppDatabase, dao: ScriptDao)`.
+    *   Declare `expect fun getInMemoryDatabase(): AppDatabase`.
+*   **Android Tests (`shared/src/androidTest/kotlin/.../AndroidYourDaoTest.kt`):**
+    *   **CRITICAL**: Use **Android Instrumented Tests** (`androidTest`), *not* Robolectric (`androidHostTest`). The `BundledSQLiteDriver` requires native libraries (`sqliteJni`) that Robolectric cannot load on the desktop JVM, leading to `UnsatisfiedLinkError`.
+    *   Create a class extending the common base: `class AndroidScriptDaoTest : ScriptDaoTest()`.
+    *   Declare local `private lateinit var database: AppDatabase` and `private lateinit var dao: ScriptDao`.
+    *   Use `@Before` and `@After` (from `org.junit`) to manage the database lifecycle using `Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)`.
+    *   Override test methods, add `@Test` annotation, and call `super`: `@Test override fun testInsertion() = super.testInsertion(database, dao)`.
+    *   Ensure `androidApp/build.gradle.kts` defines `testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"`.
+    *   **Run**: `:androidApp:connectedDebugAndroidTest`.
+*   **iOS Tests (`shared/src/iosTest/kotlin/.../IosYourDaoTest.kt`):**
+    *   **CRITICAL**: To create an in-memory database on iOS, you MUST use `Room.inMemoryDatabaseBuilder(factory = { AppDatabaseConstructor.initialize() })`. Using `Room.databaseBuilder(name = ":memory:", ...)` will throw an `IllegalArgumentException`.
+    *   Create a class extending the common base: `class IosScriptDaoTest : ScriptDaoTest()`.
+    *   Declare local `private lateinit var database: AppDatabase` and `private lateinit var dao: ScriptDao`.
+    *   Use `@BeforeTest` and `@AfterTest` (from `kotlin.test`) to manage the database lifecycle using your `actual fun getInMemoryDatabase()`.
+    *   Override test methods, add `@Test` annotation, and call `super`: `@Test override fun testInsertion() = super.testInsertion(database, dao)`.
+    *   **Run**: `:shared:iosSimulatorArm64Test`.
+
 ### Resources & Compose Multiplatform
 *   **MissingResourceException / Resource Packaging**:
     *   **Problem**: Encountering `MissingResourceException: Missing resource with path: composeResources/...` at runtime.
@@ -70,6 +93,8 @@ This document captures key learnings and patterns for working with this KMP code
 #### Running Gradle Tasks (CRITICAL AI INSTRUCTION)
 *   **Rule**: **NEVER** use the raw shell command `run_shell_command("./gradlew ...")` to execute Gradle builds, tests, or syncs unless strictly necessary for a very specific low-level reason. It often hangs, loses buffer output, and causes daemon lockups. 
 *   **Solution**: **ALWAYS** use the dedicated IDE `gradle_build` tool (e.g. `gradle_build(commandLine = "assembleDebug")`) or `gradle_sync` tool. This integrates directly with the IDE's build system and provides clean, structured output and error reporting.
+*   **KMP Android Instrumented Test Task**: The typical Gradle task for running Android Instrumented Tests in a KMP application module is `:androidApp:connectedDebugAndroidTest`. Avoid `:androidApp:androidTestDebug` as it may not be found.
+*   **KMP iOS Simulator Test Task**: The typical Gradle task for running iOS Simulator Tests in a KMP shared module is `:shared:iosSimulatorArm64Test`.
 
 #### Golden Set Versions
 *   **AGP (Android Gradle Plugin)**: `9.0.0`
