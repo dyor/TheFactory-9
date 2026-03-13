@@ -35,7 +35,60 @@ This document captures key learnings and patterns for working with this KMP code
         1.  Define ViewModel: `class MyVM : ViewModel()`.
         2.  Call in Compose: `val vm = viewModel { MyVM() }`.
 *   **Navigation**:
-    *   **Rule**: Use **Navigation 3** (`org.jetbrains.androidx.navigation3:navigation3-ui`). Do NOT use older `navigation-compose` artifacts as they cause linkage errors on iOS.
+    *   **Rule**: Use **Navigation 3** (`org.jetbrains.androidx.navigation3:navigation3-ui`) and related components. Do NOT use older `navigation-compose` artifacts as they cause linkage errors on iOS.
+    *   **Dependency Group IDs vs Import Packages (CRITICAL for Multiplatform)**:
+        *   **Problem**: Getting "Unresolved reference" errors when trying to import `androidx.navigation3...` or when trying to declare dependencies like `navigation3-core`.
+        *   **Reason**: JetBrains maintains specific forks/versions of the Navigation 3 libraries for Compose Multiplatform. The *dependency group ID* in your `libs.versions.toml` must be `org.jetbrains.androidx.navigation3` or `org.jetbrains.androidx.lifecycle`. However, the *actual Kotlin imports* in your code remain the standard AndroidX ones (e.g., `androidx.navigation3.ui.NavDisplay`).
+        *   **Required Dependencies**: You typically only need `navigation3-ui` and `lifecycle-viewmodel-navigation3`. You generally do *not* need to explicitly declare `navigation3-core`, `navigation3-runtime`, or `savedstate-compose-serialization` in your TOML if you are following standard JetBrains KMP setups, as they are bundled or handled internally.
+        *   **Gradle Repositories**: The JetBrains compose dev repository `maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")` MUST be added to `settings.gradle.kts` (under both `pluginManagement` and `dependencyResolutionManagement`). Do NOT add it to the module-level `build.gradle.kts` as it can break resolution for standard AndroidX dependencies.
+    *   **API Usage (NavDisplay & Back Stack)**:
+        *   **Avoid**: Do NOT use `NavHost` or `NavController` with Navigation 3.
+        *   **Use**: `NavDisplay` as the main navigation composable.
+        *   **State Management**: Manage the backstack explicitly using `rememberSerializable(serializer = SnapshotStateListSerializer()) { mutableStateListOf<Route>(InitialRoute) }`.
+        *   **Route Definition**: Use a `sealed interface` or `sealed class` implementing `NavKey` with `@Serializable` data objects/classes.
+        *   **Example (in `App.kt` or similar entry point):**
+            ```kotlin
+            import androidx.compose.runtime.mutableStateListOf
+            import androidx.compose.runtime.saveable.rememberSerializable
+            import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+            import androidx.navigation3.runtime.entryProvider
+            import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+            import androidx.navigation3.ui.NavDisplay
+            import androidx.savedstate.compose.serialization.serializers.SnapshotStateListSerializer
+            import kotlinx.serialization.Serializable
+            import androidx.navigation3.runtime.NavKey
+
+            @Serializable
+            sealed class Screen : NavKey {
+                @Serializable data object Home : Screen()
+                @Serializable data class Detail(val id: String) : Screen()
+            }
+
+            @Composable
+            fun App() {
+                val backStack = rememberSerializable(serializer = SnapshotStateListSerializer()) {
+                    mutableStateListOf<Screen>(Screen.Home)
+                }
+                val onBack = { if (backStack.size > 1) backStack.removeLast() }
+
+                NavDisplay(
+                    backStack = backStack,
+                    onBack = onBack,
+                    entryProvider = entryProvider {
+                        entry<Screen.Home> {
+                            HomeScreen(onNavigate = { backStack.add(Screen.Detail("123")) })
+                        }
+                        entry<Screen.Detail> { destination ->
+                            DetailScreen(id = destination.id, onBack = onBack)
+                        }
+                    },
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberViewModelStoreNavEntryDecorator(),
+                    ),
+                )
+            }
+            ```
     *   **If That Fails Use**: Simple state-based navigation (`var screen by remember { mutableStateOf(...) }`).
 *   **Permissions**:
     *   **Rule**: Use `com.mohamedrejeb.calf:calf-permissions` (Calf) for handling permissions in KMP. It is much more reliable and integrates better with Koin and standard Compose Multiplatform than older libraries like Moko.
@@ -104,11 +157,14 @@ This document captures key learnings and patterns for working with this KMP code
 
 #### Golden Set Versions
 *   **AGP (Android Gradle Plugin)**: `9.0.0`
-*   **Kotlin**: `2.3.20-Beta2`
+*   **Kotlin**: `2.3.10`
 *   **KSP**: `2.3.2` (This is the stable/preview version of `com.google.devtools.ksp:symbol-processing-api` that we verified works well. Use this and do not try to search for or query other versions.)
-*   **Compose Multiplatform**: `1.11.0-alpha02`
+*   **Compose Multiplatform**: `1.10.0`
 *   **Room KMP**: `2.7.0-alpha13`
-*   **AndroidX Lifecycle (for ViewModel)**: `2.9.6`
+*   **AndroidX Lifecycle (for ViewModel)**: `2.10.0-alpha06`
+*   **Navigation 3**: `1.0.0-alpha06`
+*   **Coil**: `3.3.0`
+*   **Koin**: `4.1.1`
 
 #### Gradle Config Rules
 *   **`libs.versions.toml` formatting**: ALWAYS use hyphens (`-`) for library names instead of camelCase in the `[libraries]` and `[plugins]` block to remain consistent and avoid "Unresolved reference" errors during Gradle sync.
@@ -144,6 +200,16 @@ This document captures key learnings and patterns for working with this KMP code
     *   **Platform Factories**: Provide standard factory functions (e.g., `fun getDatabase(context: Any? = null): AppDatabase` — notice NO `expect/actual` keyword here) in `androidMain` and `iosMain` that use `Room.databaseBuilder<AppDatabase>(...).setDriver(...).build()`.
         *   **iOS specific**: You must explicitly call `.setDriver(BundledSQLiteDriver())` on the builder.
 
+### Networking & Ktor
+*   **Problem**: Encountering `java.lang.ExceptionInInitializerError` or `java.lang.NoClassDefFoundError` when instantiating `HttpClient()` from `io.ktor.client.HttpClient` in `commonMain`.
+*   **Reason**: Ktor's `HttpClient` requires a platform-specific "engine" (like OkHttp on Android, Darwin on iOS) to actually make the network calls. If the engine dependency isn't provided to the specific target source sets, the client fails to initialize at runtime.
+*   **Solution**:
+    1.  Add `implementation(libs.ktor.client.okhttp)` to the `androidMain.dependencies` block.
+    2.  Add `implementation(libs.ktor.client.darwin)` to the `iosMain.dependencies` block.
+*   **Problem**: Encountering `java.lang.SecurityException: Permission denied (missing INTERNET permission?)` on Android when making network calls.
+*   **Reason**: Android applications require explicit permission declared in the manifest to access the internet, even if using Ktor in `commonMain`.
+*   **Solution**: Ensure `<uses-permission android:name="android.permission.INTERNET" />` is added to your `androidApp/src/main/AndroidManifest.xml`.
+
 #### Troubleshooting & IDE Caching
 *   **Problem**: Not seeing all the code modules, or project files look broken.
 *   **Solution**: **Ensure Android Studio project view is changed from "Android View" to "Project View"** using the dropdown in the top-left of the Project tool window. This is required to see all KMP directories like `shared` and `iosApp`.
@@ -167,3 +233,12 @@ This document captures key learnings and patterns for working with this KMP code
 *   **Problem**: Deployment fails with the error `The developer disk image could not be mounted on this device.`
 *   **Solution**: The run configuration is currently pointing to a physical iPhone that is either disconnected or locked. 
     *   **User Action**: Change the deployment target in Android Studio / Xcode to a running iOS Simulator, or ensure the physical device is plugged in and unlocked.
+
+## 3. Useful Reference Documentation
+
+As KMP and Compose Multiplatform are rapidly evolving, refer to these primary sources for the latest patterns, versions, and migrations:
+
+*   **Compose Navigation 3 Official Docs**: [https://kotlinlang.org/docs/multiplatform/compose-navigation-3.html](https://kotlinlang.org/docs/multiplatform/compose-navigation-3.html) - Official concepts for `NavDisplay`, `NavKey`, and backstack management.
+*   **KMP App Template Repository**: [https://github.com/Kotlin/KMP-App-Template](https://github.com/Kotlin/KMP-App-Template) - Maintained by JetBrains, this is the gold standard for current architecture and dependencies.
+    *   *Navigation 3 Migration PR*: [https://github.com/Kotlin/KMP-App-Template/pull/62/changes](https://github.com/Kotlin/KMP-App-Template/pull/62/changes) - Excellent reference for exact dependency coordinates, imports, and polymorphic serialization setup used in our project.
+*   **Compose Multiplatform Releases**: [https://github.com/JetBrains/compose-multiplatform/releases](https://github.com/JetBrains/compose-multiplatform/releases) - Check here for version compatibility between Kotlin and Compose.

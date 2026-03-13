@@ -41,6 +41,7 @@ Goal: Initialize the stack and establish core dependencies.
 - [ ] **User Action**: Open `iosApp/iosApp.xcodeproj` in Xcode. Navigate to the `iosApp` target -> 'Signing & Capabilities' tab and configure the development 'Team'. This prevents obscure iOS compiler linkage errors later.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Extraneous targets removed and iOS signing configured"`.
 - [ ] **Agent Action**: Configure `build.gradle.kts` with required dependencies (Room, Ktor, Koin, Coil, Compose Navigation 3, Calf permissions). Only do this AFTER targets have been purged.
+    *   **Note**: If facing `Unresolved reference 'androidx.savedstate:savedstate-compose-serialization'` during dependency resolution, ensure this dependency is *removed* from `libs.versions.toml` and `build.gradle.kts`. Navigation 3 in KMP handles `NavKey` serialization via `SavedStateConfiguration` and `kotlinx.serialization.modules` directly, as documented in `SKILLS/SKILL_SKILL.md`.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
 - [ ] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
 - [ ] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
@@ -72,6 +73,7 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 ### Step 2: Native Implementations
 ### Step 2.1: Gemini/Network and Room Implementation
 - [ ] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
+- [ ] **Agent Action**: Ensure network permissions and Ktor engines are configured. Specifically, verify `<uses-permission android:name="android.permission.INTERNET" />` is in `AndroidManifest.xml` and Ktor platform engines (`ktor-client-okhttp` for Android, `ktor-client-darwin` for iOS) are added to respective source sets in `build.gradle.kts`.
 - [ ] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
 - [ ] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
@@ -102,15 +104,22 @@ Goal: Polish, optimize, and prepare for production.
 
 ## Execution Protocol
 When the User says "Execute" or "Continue with the GUIDE.md":
-1. Open and read the `GUIDE.md` file.
-2. Scan sequentially to identify the first incomplete `- [ ]` task.
-3. If the next task is an `**Agent Action**`:
-    - Perform the necessary code changes to complete the action.
-    - Validate the changes (e.g., run local unit tests or build commands if applicable).
-    - Update the `GUIDE.md` file, changing the `- [ ]` to `- [x]` for the completed task.
-    - Move on to the next task or pause if the next task requires the User.
-4. If the next task is a `**User Action**` or requires external `**Validation**`:
-    - Stop execution.
-    - Prompt the User with specific instructions on what they need to do manually.
-    - Wait for the User to confirm completion before continuing.
-5. Periodically, at the end of a session or after major milestones, run the instructions in `SKILLS/CALCULATOR_SKILL.md` to update the `CALCULATOR.md` file and keep progress tracking up to date.
+1.  Open and read the `GUIDE.md` file.
+2.  Scan sequentially to identify the first incomplete `- [ ]` task.
+3.  If the next task is an `**Agent Action**`:
+    -   Perform the necessary code changes to complete the action.
+    -   **Debugging Dependency Resolution**: If "Could not resolve" errors occur after Gradle sync:
+        *   Verify artifact group ID and name (e.g., `org.jetbrains.androidx` vs `androidx`).
+        *   Verify artifact existence on Maven repositories (e.g., by web searching the full Maven coordinate).
+        *   Ensure all necessary Maven repositories (e.g., `mavenCentral()`, `google()`, `maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")`) are correctly declared **globally** in `settings.gradle.kts` (under both `pluginManagement { repositories { ... } }` and `dependencyResolutionManagement { repositories { ... } }`). Avoid adding repositories to module-level `build.gradle.kts` as this can override global settings and cause other dependencies to fail.
+        *   Meticulously match dependency declarations (group ID, artifact ID, version) and API usage (imports, component names, parameters) when adapting from sample implementations.
+        *   Always perform a Gradle sync (`gradle_sync()`) after modifying build scripts (`libs.versions.toml`, `build.gradle.kts`).
+        *   Always run `analyze_file()` after significant code changes to catch new errors.
+    -   Validate the changes (e.g., run local unit tests or build commands if applicable).
+    -   Update the `GUIDE.md` file, changing the `- [ ]` to `- [x]` for the completed task.
+    -   Move on to the next task or pause if the next task requires the User.
+4.  If the next task is a `**User Action**` or requires external `**Validation**`:
+    -   Stop execution.
+    -   Prompt the User with specific instructions on what they need to do manually.
+    -   Wait for the User to confirm completion before continuing.
+5.  Periodically, at the end of a session or after major milestones, run the instructions in `SKILLS/CALCULATOR_SKILL.md` to update the `CALCULATOR.md` file and keep progress tracking up to date.

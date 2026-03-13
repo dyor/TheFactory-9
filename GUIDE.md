@@ -27,23 +27,23 @@ Goal: Implement the primary business logic, integrations (e.g., AI interop), and
 - [x] **Validation**: Run unit tests for Data layer.
 
 ### Step 2: Main User Interface
-- [ ] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
-- [ ] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens. 
-- [ ] **Validation**: Manual testing of UI states.
-- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 2 completion.
+- [x] **Agent Action**: Implement Compose Navigation 3 with 6 navigation nodes: Home, Writers Room, Recording Studio, Editing Studio, Publishing Studio, and Archives.
+- [x] **Agent Action**: Create core UI screens and ViewModels for each of these screens. Start by just having 5 buttons on the Home screen (one for each of the other pages) and then a Home button on the other screens.
+- [x] **Validation**: Manual testing of UI states.
+- [x] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 2 completion.
 
 ## Phase 3: Hardware / Native Integrations (Production)
 Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 
 ### Step 1: Permissions
-- [ ] **Agent Action**: Configure cross-platform permission requests using `calf-permissions` (com.mohamedrejeb.calf:calf-permissions).
-- [ ] **Validation**: User grants permissions on Android and iOS.
+- [x] **Agent Action**: Configure cross-platform permission requests using `calf-permissions` (com.mohamedrejeb.calf:calf-permissions).
+- [x] **Validation**: User grants permissions on Android and iOS.
 
 ### Step 2: Native Implementations
 ### Step 2.1: Gemini/Network and Room Implementation
-- [ ] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
-- [ ] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
-- [ ] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
+- [x] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
+- [x] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
+- [x] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
 ### Step 2.2: Camera/Video Implementation
 - [ ] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script. 

@@ -1,5 +1,13 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -8,6 +16,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.buildConfig)
 }
 
 kotlin {
@@ -32,12 +42,19 @@ kotlin {
        androidResources {
            enable = true
        }
-
     }
     
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.androidx.camera.core)
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.view)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -54,7 +71,10 @@ kotlin {
             implementation(libs.sqlite.bundled)
             
             // Navigation
-            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.navigation3.ui)
+            implementation(libs.lifecycle.viewmodel.navigation3)
+            implementation(libs.navigation3.runtime)
+
         
             // Ktor
             implementation(libs.ktor.client.core)
@@ -77,6 +97,7 @@ kotlin {
             
             // Datetime
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -87,6 +108,11 @@ kotlin {
 
 room {
     schemaDirectory("src/commonMain/room/schemas")
+}
+
+buildConfig {
+    buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey}\"")
+    packageName("org.example.project.shared")
 }
 
 dependencies {
