@@ -13,7 +13,6 @@ import org.example.project.domain.model.Script
 
 class RecordingStudioViewModel(
     private val scriptDao: ScriptDao,
-    private val scriptId: Long?
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RecordingStudioUiState())
     val uiState: StateFlow<RecordingStudioUiState> = _uiState.asStateFlow()
@@ -21,21 +20,19 @@ class RecordingStudioViewModel(
     private var teleprompterJob: Job? = null
 
     init {
-        if (scriptId != null) {
-            viewModelScope.launch {
-                val script = scriptDao.getScriptById(scriptId)
-                if (script != null) {
-                    val words = script.content.split("\\s+".toRegex()).filter { it.isNotBlank() }
+        viewModelScope.launch {
+            scriptDao.getActiveScript().collect {
+                if (it != null) {
+                    val words = it.content.split("\\s+".toRegex()).filter { it.isNotBlank() }
                     _uiState.value = _uiState.value.copy(
-                        scriptContent = script.content,
-                        words = words
+                        scriptContent = it.content,
+                        words = words,
+                        errorMessage = null
                     )
                 } else {
-                    _uiState.value = _uiState.value.copy(errorMessage = "Script not found.")
+                    _uiState.value = _uiState.value.copy(errorMessage = "No active script found.")
                 }
             }
-        } else {
-            _uiState.value = _uiState.value.copy(errorMessage = "No script provided.")
         }
     }
 

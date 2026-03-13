@@ -60,7 +60,9 @@ class WritersRoomViewModel(
                 content = currentScriptText,
                 createdAt = Clock.System.now().toEpochMilliseconds()
             )
-            val id = scriptDao.insertScript(script)
+            val id = scriptDao.insertScript(script.copy(isActive = true))
+            scriptDao.clearActiveScript()
+            scriptDao.setActiveScript(id)
             _uiState.value = _uiState.value.copy(isSaved = true, savedScriptId = id)
         }
     }

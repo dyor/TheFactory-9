@@ -53,7 +53,8 @@ Goal: Initialize the stack and establish core dependencies.
 Goal: Implement the primary business logic, integrations (e.g., AI interop), and local database.
 
 ### Step 1: Data Models & Persistence
-- [ ] **Agent Action**: Implement base Entities, DAOs, and Database config with Room. 
+- [ ] **Agent Action**: Implement base Entities, DAOs, and Database config with Room.
+    *   **Note on Room KMP Migrations**: During development, *always* append `.fallbackToDestructiveMigration(dropAllTables = true)` to your `Room.databaseBuilder` inside your platform-specific `getDatabaseBuilder()` functions (in both `androidMain` and `iosMain`). Do NOT attempt to use old Android `SupportSQLiteDatabase` manual migrations as they will crash the iOS build or fail at runtime when using `BundledSQLiteDriver`.
 - [ ] **Agent Action**: Create unit tests for Data Layer (Note: For Room KMP, implement these as Android Instrumented tests and iOS simulator tests, avoid Robolectric).
 - [ ] **Validation**: Run unit tests for Data layer.
 
@@ -77,11 +78,11 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 - [ ] **User Action**: Add `GEMINI_API_KEY=your_api_key_here` to `local.properties` to keep it out of version control.
 - [ ] **Agent Action**: For the Writer's Room, implement a Gemini client using Ktor. Ensure you configure the `HttpTimeout` plugin (e.g., 60 seconds) to prevent socket timeouts during long LLM generations. Inject the API key securely (e.g., via Gradle property injection or `buildConfigField`) to prevent hardcoding. Include a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
 - [ ] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
+- [ ] **Agent Action**: Implement "Active Script" logic: Update `Script` entity with `isActive` field, add `clearActiveScript()` and `setActiveScript()` to `ScriptDao`, and modify `WritersRoomViewModel.saveScript()` to set the newly saved script as active.
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
-### Step 2.2: Camera/Video Implementation
-- [ ] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script. 
-- [ ] **Agent Action**: For the Recording Studio, show a front-facing camera view with a start button on the bottom half of the screen, and on the top half of the screen show the script.
-- [ ] **Agent Action**: When the button on the camera view is tapped start a 5 second countdown then start teleprompting the script while recording the user. Include 3 lines at a time on the teleprompter and advance them so that we finish the script in 60 seconds.
+- [ ] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script.
+- [ ] **Agent Action**: For the Recording Studio, show a front-facing camera view with a start button on the bottom half of the screen, and on the top half of the screen show the active script. Implement `CameraPreview` as an `expect/actual` function. Ensure the `CameraPreview` is not consuming touch events by adding `Modifier.clickable(enabled = false, onClick = {})` to it.
+- [ ] **Agent Action**: Implement `RecordingStudioViewModel` to manage a 5-second countdown and teleprompter logic that displays 3 lines at a time and advances them to finish the script in 60 seconds. The `RecordingStudioScreen` should observe the active script from the ViewModel.
 - [ ] **Agent Action**: When the recording is done, allow user to re-record. Also include navigation to go back (to Writer's Room) and forward (to Editing Studio).
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Recording Studio complete"`
 - [ ] **Agent Action**: For the Editing Studio, allow the user to mark sections of the video for removal (e.g., where there was white space or where they made a mistake). Include a Save button that stares the modified video and a Restore button that returns the original video.

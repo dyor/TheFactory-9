@@ -9,18 +9,18 @@ Progress is calculated by evaluating the completed (`- [x]`) versus pending (`- 
 |-------|-------------|-----------|---------|--------------|
 | Phase 1: Foundation & Infrastructure | 10 | 10 | 0 | 100% |
 | Phase 2: Core Features & Logic | 7 | 7 | 0 | 100% |
-| Phase 3: Hardware / Native Integrations | 17 | 1 | 16 | 5.88% |
+| Phase 3: Hardware / Native Integrations | 17 | 12 | 5 | 70.59% |
 | Phase 4: The Final Cut | 6 | 0 | 6 | 0% |
 
 ## Actionable Insights
 *   **Current Phase:** Phase 3: Hardware / Native Integrations (Production)
-*   **Next Task:** `- [ ] **Validation**: User grants permissions on Android and iOS.`
-*   **Pending Breakdown:** 2 User Actions, 16 Agent Actions, 5 Validations remaining.
+*   **Next Task:** `- [x] **Agent Action**: Implement "Active Script" logic: Update `Script` entity with `isActive` field, add `clearActiveScript()` and `setActiveScript()` to `ScriptDao`, and modify `WritersRoomViewModel.saveScript()` to set the newly saved script as active.`
+*   **Pending Breakdown:** 0 User Actions, 5 Agent Actions, 3 Validations remaining.
 
 ---
 
 ## Overall Project Progress
 *   **Total Tasks**: 40
-*   **Completed Tasks**: 18
-*   **Pending Tasks**: 22
-*   **Overall Completion**: 45.0%
+*   **Completed Tasks**: 29
+*   **Pending Tasks**: 11
+*   **Overall Completion**: 72.5%

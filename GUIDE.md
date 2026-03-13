@@ -43,14 +43,14 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 ### Step 2.1: Gemini/Network and Room Implementation
 - [x] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
 - [x] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
-- [x] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
+- [x] **Agent Action**: Implement "Active Script" logic: Update `Script` entity with `isActive` field, add `clearActiveScript()` and `setActiveScript()` to `ScriptDao`, and modify `WritersRoomViewModel.saveScript()` to set the newly saved script as active.
 - [x] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
 ### Step 2.2: Camera/Video Implementation
-- [ ] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script. 
-- [ ] **Agent Action**: For the Recording Studio, show a front-facing camera view with a start button on the bottom half of the screen, and on the top half of the screen show the script.
-- [ ] **Agent Action**: When the button on the camera view is tapped start a 5 second countdown then start teleprompting the script while recording the user. Include 3 lines at a time on the teleprompter and advance them so that we finish the script in 60 seconds.
-- [ ] **Agent Action**: When the recording is done, allow user to re-record. Also include navigation to go back (to Writer's Room) and forward (to Editing Studio).
-- [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Recording Studio complete"`
+- [x] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script. 
+- [x] **Agent Action**: For the Recording Studio, show a front-facing camera view with a start button on the bottom half of the screen, and on the top half of the screen show the active script. Implement `CameraPreview` as an `expect/actual` function. Ensure the `CameraPreview` is not consuming touch events by adding `Modifier.clickable(enabled = false, onClick = {})` to it.
+- [x] **Agent Action**: Implement `RecordingStudioViewModel` to manage a 5-second countdown and teleprompter logic that displays 3 lines at a time and advances them to finish the script in 60 seconds. The `RecordingStudioScreen` should observe the active script from the ViewModel.
+- [x] **Agent Action**: When the recording is done, allow user to re-record. Also include navigation to go back (to Writer's Room) and forward (to Editing Studio).
+- [x] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Recording Studio complete"`
 - [ ] **Agent Action**: For the Editing Studio, allow the user to mark sections of the video for removal (e.g., where there was white space or where they made a mistake). Include a Save button that stares the modified video and a Restore button that returns the original video.
 - [ ] **Agent Action**: Include navigation for returning to the Editing Studio and advancing to the Publishing room.
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Editing Studio complete"`

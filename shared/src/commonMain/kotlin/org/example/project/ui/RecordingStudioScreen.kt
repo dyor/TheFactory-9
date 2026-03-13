@@ -1,5 +1,6 @@
 package org.example.project.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,7 +38,7 @@ fun RecordingStudioScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (cameraPermissionState.status == PermissionStatus.Granted) {
-            CameraPreview(modifier = Modifier.fillMaxSize())
+            CameraPreview(modifier = Modifier.fillMaxSize().clickable(enabled = false, onClick = {}))
         }
 
         Column(modifier = Modifier.fillMaxSize()) {

@@ -155,7 +155,17 @@ This document captures key learnings and patterns for working with this KMP code
 *   **KMP Android Instrumented Test Task**: The typical Gradle task for running Android Instrumented Tests in a KMP application module is `:androidApp:connectedDebugAndroidTest`. Avoid `:androidApp:androidTestDebug` as it may not be found.
 *   **KMP iOS Simulator Test Task**: The typical Gradle task for running iOS Simulator Tests in a KMP shared module is `:shared:iosSimulatorArm64Test`.
 
-#### Golden Set Versions
+#### Avoid Version Roulette (CRITICAL AI INSTRUCTION)
+*   **Rule**: Before randomly changing version numbers or regressing to previous library versions, **ALWAYS** follow these steps:
+    1.  **Check Existing Documentation**: Consult `SKILLS/SKILL_SKILL.md` and `AGENTS.md` for any forbidden or recommended versions.
+    2.  **Web Search & Official Docs**: Use `web_search` and `search_android_docs` to find official migration guides, known issues, or compatibility tables for the library in question.
+    3.  **Prioritize Code Updates**: The error is most likely due to API changes in a newer library version. Focus on updating your code to match the new version's API, rather than downgrading the library.
+    4.  **Diagnose Transitive Conflicts**: Use Gradle's `dependencyInsight` command to identify potential transitive dependency mismatches. For example, to diagnose Ktor issues for the iOS ARM64 compilation classpath:
+        ```bash
+        ./gradlew :shared:dependencyInsight --dependency io.ktor --configuration iosArm64CompileKlibraries
+        ```
+    5.  **Clear Caches**: If dependency issues persist, try clearing Gradle caches (`./gradlew clean --refresh-dependencies`) and IDE caches (File -> Invalidate Caches...).
+    6.  **Upgrade Strategically**: If a newer version of a library resolves a known issue or improves compatibility, consider upgrading *all* related libraries to their latest stable versions together, after thorough research.
 *   **AGP (Android Gradle Plugin)**: `9.0.0`
 *   **Kotlin**: `2.3.10`
 *   **KSP**: `2.3.2` (This is the stable/preview version of `com.google.devtools.ksp:symbol-processing-api` that we verified works well. Use this and do not try to search for or query other versions.)
@@ -176,28 +186,30 @@ This document captures key learnings and patterns for working with this KMP code
 *   **Version Catalog**: Update `gradle/libs.versions.toml` frequently but verify compatibility between Kotlin, Compose Multiplatform, and AndroidX libraries. Use `./gradlew :shared:assemble` to quickly check dependency resolution.
 
 #### Room KMP Database Initialization (CRITICAL & CORRECTED)
-*   **Problem**: Encountering `kotlin.IllegalStateException: Cannot find the associated androidx.room.RoomDatabaseConstructor` or `Cannot create a RoomDatabase without providing a SQLiteDriver via setDriver()` on iOS.
-*   **Solution**: For Room 2.7.0+ in KMP, you must rely on KSP to generate the constructor for non-Android platforms, but you configure the driver via standard factory functions.
-    *   **Gradle Setup (Crucial)**: KSP *must* be applied to every target utilizing the database in `shared/build.gradle.kts`. Do not forget iOS! You must also declare a schema directory.
-        ```kotlin
-        room { schemaDirectory("src/commonMain/room/schemas") }
-        dependencies {
-            add("kspAndroid", libs.androidx.room.compiler)
-            add("kspIosArm64", libs.androidx.room.compiler)
-            add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-        }
-        ```
-    *   **Centralized Versioning**: Define `const val DATABASE_VERSION = X` in `commonMain` and use it.
-    *   **`commonMain` Definition**:
-        *   Define `AppDatabase` as an `abstract class` (NOT `expect abstract class`).
-        *   Annotate it with `@Database(...)` and crucially, `@ConstructedBy(AppDatabaseConstructor::class)`.
-        *   Declare the expect constructor:
+*   **Problem**: Encountering `kotlin.IllegalStateException: Room cannot verify the data integrity. Looks like you've changed schema but forgot to update the version number.` or `Cannot create a RoomDatabase without providing a SQLiteDriver via setDriver()` on iOS.
+*   **Solution**: For Room 2.7.0+ in KMP, you must rely on KSP to generate the constructor for non-Android platforms, but you configure the driver via standard factory functions. For *simple, additive* schema changes (like adding new columns with default values), `AutoMigration` is the preferred and simplest approach. For more complex migrations (e.g., column renames, type changes), manual `Migration` classes might still be necessary.
+    *   **Rule**: When making any schema changes (adding/removing entities, fields, or changing types), you MUST increment the `version` number in the `@Database` annotation.
+    *   **Manual Migrations (The KMP Way)**:
+        *   **CRITICAL RULE**: Do NOT write manual migrations using the old Android `SupportSQLiteDatabase` in `androidMain`. This is incompatible with KMP's `BundledSQLiteDriver` and will crash the iOS build or fail at runtime.
+        *   Proper manual KMP migrations must be written in `commonMain` using `androidx.sqlite.SQLiteConnection` (part of the new KMP SQLite driver APIs) so they execute on both Android and iOS.
+    *   **Development Fallback (Destructive Migration)**:
+        *   During active development when the schema changes rapidly and preserving data isn't necessary, the safest and easiest way to prevent `IllegalStateException` crashes is to use `.fallbackToDestructiveMigration(dropAllTables = true)`.
+        *   **Implementation**: Add this line directly to the `RoomDatabase.Builder` inside your `getDatabaseBuilder()` functions in both `androidMain` and `iosMain`.
+    *   **AutoMigration Process (For Production Additive Changes)**:
+        1.  **Configure `AppDatabase.kt`**: Set `version = [NEW_VERSION]`, `exportSchema = true`, and add `autoMigrations = [AutoMigration(from = [OLD_VERSION], to = [NEW_VERSION])]`. Ensure `TypeConverters` are correctly applied.
+        2.  **Configure `build.gradle.kts`**: Ensure the `room { schemaDirectory(...) }` block is present and that `ksp` arguments for `room.schemaLocation` are passed for *all* KSP targets (`kspAndroid`, `kspIosArm64`, `kspIosSimulatorArm64`). Example for `kspAndroid` (other KSP targets are similar):
             ```kotlin
-            @Suppress("NO_ACTUAL_FOR_EXPECT")
-            expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase>
+            dependencies {
+                add("kspAndroid", libs.room.compiler) {
+                    arg("room.schemaLocation", "$projectDir/src/commonMain/room/schemas")
+                }
+                // ... other ksp targets
+            }
             ```
+        3.  **Generate `OLD_VERSION.json` Schema**: Temporarily set `version = [OLD_VERSION]` in `AppDatabase.kt` and remove the `autoMigrations` block. Run a clean build (`./gradlew clean :androidApp:assembleDebug`) to generate the schema file for the old version. Verify its existence.
+        4.  **Re-apply `AutoMigration` and Increment Version**: Set `version = [NEW_VERSION]` in `AppDatabase.kt` and re-add `autoMigrations = [AutoMigration(from = [OLD_VERSION], to = [NEW_VERSION])]`. Run another clean build to validate `AutoMigration` and generate `NEW_VERSION.json`.
     *   **Platform Implementations**: **Do NOT write `actual object AppDatabaseConstructor`.** By suppressing the missing actual warning, we tell KSP to generate the platform-specific actual implementations automatically during the build step.
-    *   **Platform Factories**: Provide standard factory functions (e.g., `fun getDatabase(context: Any? = null): AppDatabase` — notice NO `expect/actual` keyword here) in `androidMain` and `iosMain` that use `Room.databaseBuilder<AppDatabase>(...).setDriver(...).build()`.
+    *   **Platform Factories**: Provide standard factory functions (e.g., `fun getDatabase(context: Any? = null): AppDatabase` — notice NO `expect/actual` keyword here) in `androidMain` and `iosMain` that use `Room.databaseBuilder<AppDatabase>(...).setDriver(...).build()`. You should **remove any explicit `.addMigrations()` calls if `AutoMigration` is used for that specific version range, and remove `.fallbackToDestructiveMigration()` as it is no longer needed/recommended.**
         *   **iOS specific**: You must explicitly call `.setDriver(BundledSQLiteDriver())` on the builder.
 
 ### Networking & Ktor

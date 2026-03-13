@@ -24,4 +24,13 @@ interface ScriptDao {
 
     @Query("SELECT * FROM scripts WHERE id = :id")
     suspend fun getScriptById(id: Long): Script?
+
+    @Query("UPDATE scripts SET isActive = 0 WHERE isActive = 1")
+    suspend fun clearActiveScript()
+
+    @Query("UPDATE scripts SET isActive = 1 WHERE id = :scriptId")
+    suspend fun setActiveScript(scriptId: Long)
+
+    @Query("SELECT * FROM scripts WHERE isActive = 1 LIMIT 1")
+    fun getActiveScript(): Flow<Script?>
 }

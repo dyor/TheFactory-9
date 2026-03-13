@@ -25,7 +25,7 @@ fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     
     return Room.databaseBuilder<AppDatabase>(
         name = dbFilePath
-    )
+    ).fallbackToDestructiveMigration(dropAllTables = true)
 }
 
 fun getDatabase(): AppDatabase {

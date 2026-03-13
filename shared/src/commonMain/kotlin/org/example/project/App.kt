@@ -1,57 +1,131 @@
 package org.example.project
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.mohamedrejeb.calf.permissions.Permission
+import com.mohamedrejeb.calf.permissions.rememberPermissionState
+import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.painterResource
 
 import kotlinproject.shared.generated.resources.Res
 import kotlinproject.shared.generated.resources.film_noir
-import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.*
-
-// Navigation 3 imports
-
-import androidx.savedstate.serialization.SavedStateConfiguration
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-// Removed: import kotlinx.serialization.modules.subclass
-import androidx.navigation3.runtime.rememberNavBackStack
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
-
-import kotlinx.serialization.Serializable
-import androidx.navigation3.runtime.NavKey
-
-import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
-import com.mohamedrejeb.calf.permissions.Permission
-import com.mohamedrejeb.calf.permissions.rememberPermissionState
-
 import org.example.project.data.local.AppDatabase
-import org.example.project.ui.WritersRoomScreen
-import org.example.project.ui.WritersRoomViewModel
+import org.example.project.domain.model.Script
+import org.example.project.domain.model.ScriptStage
 import org.example.project.ui.RecordingStudioScreen
 import org.example.project.ui.RecordingStudioViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.example.project.ui.WritersRoomScreen
+import org.example.project.ui.WritersRoomViewModel
+
+
+@Composable
+fun HomeScreen(
+    activeScript: Script?,
+    onNavigateToWritersRoom: () -> Unit,
+    onNavigateToRecordingStudio: () -> Unit,
+    onNavigateToEditingStudio: () -> Unit,
+    onNavigateToPublishingStudio: () -> Unit,
+    onNavigateToArchives: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Card(
+            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp).offset(y = 64.dp), // Position in the sky
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Welcome to Factory-9", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(32.dp))
+
+                when (activeScript?.currentStage) {
+                    ScriptStage.WRITERS_ROOM -> {
+                        Button(onClick = onNavigateToWritersRoom, modifier = Modifier.fillMaxWidth()) { Text("Continue Writing") }
+                    }
+                    ScriptStage.RECORDING_STUDIO -> {
+                        Button(onClick = onNavigateToRecordingStudio, modifier = Modifier.fillMaxWidth()) { Text("Go to Recording Studio") }
+                    }
+                    ScriptStage.EDITING_STUDIO -> {
+                        Button(onClick = onNavigateToEditingStudio, modifier = Modifier.fillMaxWidth()) { Text("Go to Editing Studio") }
+                    }
+                    ScriptStage.PUBLISHING_STUDIO -> {
+                        Button(onClick = onNavigateToPublishingStudio, modifier = Modifier.fillMaxWidth()) { Text("Go to Publishing Studio") }
+                    }
+                    else -> {
+                        Button(onClick = onNavigateToWritersRoom, modifier = Modifier.fillMaxWidth()) { Text("Start New Script") }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = onNavigateToArchives, modifier = Modifier.fillMaxWidth()) { Text("Archives") }
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailScreen(screenName: String, onBack: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Card(
+            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("You are in the ${screenName}", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(32.dp))
+                Button(onClick = onBack) { Text("Go Home") }
+            }
+        }
+    }
+}
+
 
 @Serializable // Make Screen keys serializable for Navigation 3
 sealed class Screen : NavKey {
@@ -60,7 +134,7 @@ sealed class Screen : NavKey {
     @Serializable
     data object WritersRoom : Screen() { const val TITLE = "Writers Room" } // Renamed title to TITLE
     @Serializable
-    data class RecordingStudio(val scriptId: Long? = null) : Screen() { companion object { const val TITLE = "Recording Studio" } } // Renamed title to TITLE
+    data object RecordingStudio : Screen() { const val TITLE = "Recording Studio" } // Renamed title to TITLE
     @Serializable
     data object EditingStudio : Screen() { const val TITLE = "Editing Studio" } // Renamed title to TITLE
     @Serializable
@@ -71,6 +145,12 @@ sealed class Screen : NavKey {
 
 @Composable
 fun App(database: AppDatabase? = null) {
+    var showSplashScreen by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(2000) // Show splash screen for 2 seconds
+        showSplashScreen = false
+    }
     // Film Noir Color Palette
     val noirColors = MaterialTheme.colorScheme.copy(
         primary = Color(0xFFE0E0E0), // Light grey for primary elements
@@ -116,137 +196,87 @@ fun App(database: AppDatabase? = null) {
                 alpha = 0.7f // Dim the background slightly to ensure text is readable
             )
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = onBack,
-                entryProvider = entryProvider {
-                    entry<Screen.Home> {
-                        HomeScreen(
-                            onNavigateToWritersRoom = { backStack.add(Screen.WritersRoom) },
-                            onNavigateToRecordingStudio = { backStack.add(Screen.RecordingStudio()) },
-                            onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) },
-                            onNavigateToPublishingStudio = { backStack.add(Screen.PublishingStudio) },
-                            onNavigateToArchives = { backStack.add(Screen.Archives) }
-                        )
-                    }
-                    entry<Screen.WritersRoom> { destination ->
-                        if (database != null) {
-                            val viewModel = viewModel { WritersRoomViewModel(database.scriptDao()) }
-                            WritersRoomScreen(
-                                viewModel = viewModel,
-                                onBack = onBack,
-                                onNavigateToRecordingStudio = { scriptId ->
-                                    backStack.add(Screen.RecordingStudio(scriptId = scriptId))
+            if (showSplashScreen) {
+                // Just show the background image during splash screen
+            } else {
+                AnimatedVisibility(
+                    visible = !showSplashScreen,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 1000))
+                ) {
+                    val activeScript by database?.scriptDao()?.getActiveScript()?.collectAsState(initial = null) ?: remember { mutableStateOf(null) }
+                    NavDisplay(
+                        backStack = backStack,
+                        onBack = onBack,
+                        entryProvider = entryProvider {
+                            entry<Screen.Home> {
+                                HomeScreen(
+                                    activeScript = activeScript,
+                                    onNavigateToWritersRoom = { backStack.add(Screen.WritersRoom) },
+                                    onNavigateToRecordingStudio = { backStack.add(Screen.RecordingStudio) },
+                                    onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) },
+                                    onNavigateToPublishingStudio = { backStack.add(Screen.PublishingStudio) },
+                                    onNavigateToArchives = { backStack.add(Screen.Archives) }
+                                )
+                            }
+                            entry<Screen.WritersRoom> { destination ->
+                                if (database != null) {
+                                    val viewModel = viewModel { WritersRoomViewModel(database.scriptDao()) }
+                                    WritersRoomScreen(
+                                        viewModel = viewModel,
+                                        onBack = onBack,
+                                        onNavigateToRecordingStudio = { _ ->
+                                            backStack.add(Screen.RecordingStudio)
+                                        }
+                                    )
+                                } else {
+                                    DetailScreen(
+                                        screenName = destination.TITLE + " (No DB)",
+                                        onBack = onBack,
+                                    )
                                 }
-                            )
-                        } else {
-                            DetailScreen(
-                                screenName = destination.TITLE + " (No DB)",
-                                onBack = onBack,
-                            )
-                        }
-                    }
-                    entry<Screen.RecordingStudio> { destination ->
-                        if (database != null) {
-                            val viewModel = viewModel { RecordingStudioViewModel(database.scriptDao(), destination.scriptId) }
-                            RecordingStudioScreen(
-                                viewModel = viewModel,
-                                onBack = onBack,
-                                onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) }
-                            )
-                        } else {
-                            DetailScreen(
-                                screenName = Screen.RecordingStudio.TITLE + " (No DB)",
-                                onBack = onBack,
-                            )
-                        }
-                    }
-                    entry<Screen.EditingStudio> { destination ->
-                        DetailScreen(
-                            screenName = destination.TITLE,
-                            onBack = onBack,
-                        )
-                    }
-                    entry<Screen.PublishingStudio> { destination ->
-                        DetailScreen(
-                            screenName = destination.TITLE,
-                            onBack = onBack,
-                        )
-                    }
-                    entry<Screen.Archives> { destination ->
-                        DetailScreen(
-                            screenName = destination.TITLE,
-                            onBack = onBack,
-                        )
-                    }
-                },
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-            )
-        }
-    }
-}
-
-@Composable
-fun HomeScreen(
-    onNavigateToWritersRoom: () -> Unit,
-    onNavigateToRecordingStudio: () -> Unit,
-    onNavigateToEditingStudio: () -> Unit,
-    onNavigateToPublishingStudio: () -> Unit,
-    onNavigateToArchives: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Card(
-            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("Welcome to Factory-9", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(32.dp))
-                Button(onClick = onNavigateToWritersRoom, modifier = Modifier.fillMaxWidth()) { Text("Writers Room") }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onNavigateToRecordingStudio, modifier = Modifier.fillMaxWidth()) { Text("Recording Studio") }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onNavigateToEditingStudio, modifier = Modifier.fillMaxWidth()) { Text("Editing Studio") }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onNavigateToPublishingStudio, modifier = Modifier.fillMaxWidth()) { Text("Publishing Studio") }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onNavigateToArchives, modifier = Modifier.fillMaxWidth()) { Text("Archives") }
+                            }
+                            entry<Screen.RecordingStudio> {
+                                if (database != null) {
+                                    val viewModel = viewModel { RecordingStudioViewModel(database.scriptDao()) }
+                                    RecordingStudioScreen(
+                                        viewModel = viewModel,
+                                        onBack = onBack,
+                                        onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) }
+                                    )
+                                } else {
+                                    DetailScreen(
+                                        screenName = Screen.RecordingStudio.TITLE + " (No DB)",
+                                        onBack = onBack,
+                                    )
+                                }
+                            }
+                            entry<Screen.EditingStudio> { destination ->
+                                DetailScreen(
+                                    screenName = destination.TITLE,
+                                    onBack = onBack,
+                                )
+                            }
+                            entry<Screen.PublishingStudio> { destination ->
+                                DetailScreen(
+                                    screenName = destination.TITLE,
+                                    onBack = onBack,
+                                )
+                            }
+                            entry<Screen.Archives> { destination ->
+                                DetailScreen(
+                                    screenName = destination.TITLE,
+                                    onBack = onBack,
+                                )
+                            }
+                        },
+                        entryDecorators = listOf(
+                            rememberSaveableStateHolderNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator(),
+                        ),
+                    )
+                }
             }
         }
     }
 }
-
-@Composable
-fun DetailScreen(screenName: String, onBack: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Card(
-            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("You are in the $screenName", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(32.dp))
-                Button(onClick = onBack) { Text("Go Home") }
-            }
-        }
-    }
-}
-
-
