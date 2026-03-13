@@ -49,6 +49,8 @@ import com.mohamedrejeb.calf.permissions.rememberPermissionState
 import org.example.project.data.local.AppDatabase
 import org.example.project.ui.WritersRoomScreen
 import org.example.project.ui.WritersRoomViewModel
+import org.example.project.ui.RecordingStudioScreen
+import org.example.project.ui.RecordingStudioViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Serializable // Make Screen keys serializable for Navigation 3
@@ -58,7 +60,7 @@ sealed class Screen : NavKey {
     @Serializable
     data object WritersRoom : Screen() { const val TITLE = "Writers Room" } // Renamed title to TITLE
     @Serializable
-    data object RecordingStudio : Screen() { const val TITLE = "Recording Studio" } // Renamed title to TITLE
+    data class RecordingStudio(val scriptId: Long? = null) : Screen() { companion object { const val TITLE = "Recording Studio" } } // Renamed title to TITLE
     @Serializable
     data object EditingStudio : Screen() { const val TITLE = "Editing Studio" } // Renamed title to TITLE
     @Serializable
@@ -121,7 +123,7 @@ fun App(database: AppDatabase? = null) {
                     entry<Screen.Home> {
                         HomeScreen(
                             onNavigateToWritersRoom = { backStack.add(Screen.WritersRoom) },
-                            onNavigateToRecordingStudio = { backStack.add(Screen.RecordingStudio) },
+                            onNavigateToRecordingStudio = { backStack.add(Screen.RecordingStudio()) },
                             onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) },
                             onNavigateToPublishingStudio = { backStack.add(Screen.PublishingStudio) },
                             onNavigateToArchives = { backStack.add(Screen.Archives) }
@@ -133,6 +135,9 @@ fun App(database: AppDatabase? = null) {
                             WritersRoomScreen(
                                 viewModel = viewModel,
                                 onBack = onBack,
+                                onNavigateToRecordingStudio = { scriptId ->
+                                    backStack.add(Screen.RecordingStudio(scriptId = scriptId))
+                                }
                             )
                         } else {
                             DetailScreen(
@@ -141,10 +146,20 @@ fun App(database: AppDatabase? = null) {
                             )
                         }
                     }
-                    entry<Screen.RecordingStudio> {
-                        RecordingStudioScreen(
-                            onBack = onBack,
-                        )
+                    entry<Screen.RecordingStudio> { destination ->
+                        if (database != null) {
+                            val viewModel = viewModel { RecordingStudioViewModel(database.scriptDao(), destination.scriptId) }
+                            RecordingStudioScreen(
+                                viewModel = viewModel,
+                                onBack = onBack,
+                                onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) }
+                            )
+                        } else {
+                            DetailScreen(
+                                screenName = Screen.RecordingStudio.TITLE + " (No DB)",
+                                onBack = onBack,
+                            )
+                        }
                     }
                     entry<Screen.EditingStudio> { destination ->
                         DetailScreen(
@@ -234,37 +249,4 @@ fun DetailScreen(screenName: String, onBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-fun RecordingStudioScreen(onBack: () -> Unit) {
-    val cameraPermissionState = rememberPermissionState(Permission.Camera)
-    val micPermissionState = rememberPermissionState(Permission.RecordAudio)
 
-    LaunchedEffect(Unit) {
-        cameraPermissionState.launchPermissionRequest()
-        micPermissionState.launchPermissionRequest()
-    }
-
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Card(
-            modifier = Modifier.widthIn(max = 400.dp).padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("Recording Studio", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(16.dp))
-                Text("Camera Permission: ${cameraPermissionState.status}", textAlign = TextAlign.Center)
-                Text("Mic Permission: ${micPermissionState.status}", textAlign = TextAlign.Center)
-                Spacer(Modifier.height(32.dp))
-                Button(onClick = onBack) { Text("Go Home") }
-            }
-        }
-    }
-}

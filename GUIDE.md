@@ -44,7 +44,7 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 - [x] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
 - [x] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
 - [x] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
-- [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
+- [x] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
 ### Step 2.2: Camera/Video Implementation
 - [ ] **Agent Action**: Allow the user to navigate to the Recording Studio after they save a script. 
 - [ ] **Agent Action**: For the Recording Studio, show a front-facing camera view with a start button on the bottom half of the screen, and on the top half of the screen show the script.

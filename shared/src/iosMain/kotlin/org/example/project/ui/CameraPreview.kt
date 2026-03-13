@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.interop.UIKitView
+import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVCaptureDeviceInput
@@ -16,6 +16,7 @@ import platform.AVFoundation.AVCaptureDevicePositionFront
 import platform.UIKit.UIView
 import platform.QuartzCore.CATransaction
 import platform.QuartzCore.kCATransactionDisableActions
+import platform.QuartzCore.CALayer
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -59,7 +60,10 @@ actual fun CameraPreview(modifier: Modifier) {
         update = { view ->
             CATransaction.begin()
             CATransaction.setValue(true, kCATransactionDisableActions)
-            view.layer.sublayers?.firstOrNull()?.setFrame(view.layer.bounds)
+            val layer = view.layer.sublayers?.firstOrNull() as? CALayer
+            if (layer != null) {
+                layer.setFrame(view.layer.bounds)
+            }
             CATransaction.commit()
         }
     )

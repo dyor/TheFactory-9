@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Permission
+import com.mohamedrejeb.calf.permissions.PermissionStatus
 import com.mohamedrejeb.calf.permissions.rememberPermissionState
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -31,12 +31,12 @@ fun RecordingStudioScreen(
     val micPermissionState = rememberPermissionState(Permission.RecordAudio)
 
     LaunchedEffect(Unit) {
-        if (!cameraPermissionState.status.isGranted) cameraPermissionState.launchPermissionRequest()
-        if (!micPermissionState.status.isGranted) micPermissionState.launchPermissionRequest()
+        if (cameraPermissionState.status != PermissionStatus.Granted) cameraPermissionState.launchPermissionRequest()
+        if (micPermissionState.status != PermissionStatus.Granted) micPermissionState.launchPermissionRequest()
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        if (cameraPermissionState.status.isGranted) {
+        if (cameraPermissionState.status == PermissionStatus.Granted) {
             CameraPreview(modifier = Modifier.fillMaxSize())
         }
 

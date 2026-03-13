@@ -28,7 +28,7 @@ Use Markdown checkboxes as bulleted lists to track state, which ensures they ren
 ## Project Overview
 [App Name: default: Factory] is a [Architecture: default=MVVM] application. It helps [Target Audience: default=App Builders] accomplish [Core Problem: create YouTube shorts for their apps].
 Aesthetic: [Visual Theme: default=based off film_noir.png]
-Core Architecture: [default=Kotlin Multiplatform (Android, iOS), Compose, Room, Compose Navigation 3, Calf Permissions]
+Core Architecture: [default=Kotlin Multiplatform (Android, iOS), Compose, Room, Compose Navigation 3, Calf Permissions, Material 3]
 
 ## Phase 1: Foundation & Infrastructure
 Goal: Initialize the stack and establish core dependencies.
@@ -45,7 +45,7 @@ Goal: Initialize the stack and establish core dependencies.
 - [ ] **Validation**: Ensure project builds and runs on Android and iOS then run `git add . && git commit -m "Phase 1 started"`.
 - [ ] **User Action**: Add `film_noir.png` to codebase at `shared/src/commonMain/composeResources/drawable/film_noir.png`.
 - [ ] **Agent Action**: Set `film_noir.png` as background image in `App.kt` immediately to verify resource loading.
-- [ ] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic.
+- [ ] **Agent Action**: Adjust application style and theme based on `film_noir.png` aesthetic. Ensure text legibility on dark backgrounds by explicitly setting `contentColor = MaterialTheme.colorScheme.onSurface` on Cards and other containers.
 - [ ] **Validation**: Validate that the app builds and runs with the background image then run `git add . && git commit -m "Phase 1 complete"`.
 - [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 1 completion.
 
@@ -74,7 +74,8 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 ### Step 2.1: Gemini/Network and Room Implementation
 - [ ] **Agent Action**: Implement `expect`/`actual` when needed for native capabilities.
 - [ ] **Agent Action**: Ensure network permissions and Ktor engines are configured. Specifically, verify `<uses-permission android:name="android.permission.INTERNET" />` is in `AndroidManifest.xml` and Ktor platform engines (`ktor-client-okhttp` for Android, `ktor-client-darwin` for iOS) are added to respective source sets in `build.gradle.kts`.
-- [ ] **Agent Action**: For the Writer's Room, implement a Gemini client that prompts Gemini 2.5 Flash for a 60-second script for a user provided prompt. To save time while building, including a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
+- [ ] **User Action**: Add `GEMINI_API_KEY=your_api_key_here` to `local.properties` to keep it out of version control.
+- [ ] **Agent Action**: For the Writer's Room, implement a Gemini client using Ktor. Ensure you configure the `HttpTimeout` plugin (e.g., 60 seconds) to prevent socket timeouts during long LLM generations. Inject the API key securely (e.g., via Gradle property injection or `buildConfigField`) to prevent hardcoding. Include a default prompt of "Write a script for YouTube short that is designed to teach people how to create compelling YouTube shorts."
 - [ ] **Agent Action**: Present the script on the screen and allow the user to edit and save it in the local Room database.
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Writer's Room complete"`
 ### Step 2.2: Camera/Video Implementation

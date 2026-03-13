@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun WritersRoomScreen(
     viewModel: WritersRoomViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToRecordingStudio: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,6 +68,14 @@ fun WritersRoomScreen(
                         enabled = uiState.generatedScript.isNotBlank()
                     ) {
                         Text(if (uiState.isSaved) "Saved!" else "Save Script")
+                    }
+
+                    if (uiState.isSaved && uiState.savedScriptId != null) {
+                        Button(
+                            onClick = { onNavigateToRecordingStudio(uiState.savedScriptId!!) }
+                        ) {
+                            Text("Go to Recording Studio")
+                        }
                     }
                 }
 

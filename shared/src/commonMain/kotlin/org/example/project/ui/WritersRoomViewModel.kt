@@ -60,8 +60,8 @@ class WritersRoomViewModel(
                 content = currentScriptText,
                 createdAt = Clock.System.now().toEpochMilliseconds()
             )
-            scriptDao.insertScript(script)
-            _uiState.value = _uiState.value.copy(isSaved = true)
+            val id = scriptDao.insertScript(script)
+            _uiState.value = _uiState.value.copy(isSaved = true, savedScriptId = id)
         }
     }
 }
@@ -71,5 +71,6 @@ data class WritersRoomUiState(
     val generatedScript: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val savedScriptId: Long? = null
 )
