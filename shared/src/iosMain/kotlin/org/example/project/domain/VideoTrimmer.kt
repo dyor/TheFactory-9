@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
+import platform.CoreMedia.CMTimeGetSeconds
+
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @OptIn(ExperimentalForeignApi::class)
 actual class VideoTrimmer actual constructor() {
@@ -22,8 +24,11 @@ actual class VideoTrimmer actual constructor() {
         segmentsToKeep: List<VideoTrimSegment>
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            val inputUrl = if (inputPath.startsWith("/")) NSURL.fileURLWithPath(inputPath) else NSURL.URLWithString(inputPath)
-            val outputUrl = if (outputPath.startsWith("/")) NSURL.fileURLWithPath(outputPath) else NSURL.URLWithString(outputPath)
+            val resolvedInput = resolveVideoPath(inputPath)
+            val resolvedOutput = resolveVideoPath(outputPath)
+
+            val inputUrl = if (resolvedInput.startsWith("/")) NSURL.fileURLWithPath(resolvedInput) else NSURL.URLWithString(resolvedInput)
+            val outputUrl = if (resolvedOutput.startsWith("/")) NSURL.fileURLWithPath(resolvedOutput) else NSURL.URLWithString(resolvedOutput)
             
             if (inputUrl == null || outputUrl == null) {
                 return@withContext false
@@ -55,6 +60,11 @@ actual class VideoTrimmer actual constructor() {
             
             val compVideoTrack = if (videoTracks.isNotEmpty()) composition.addMutableTrackWithMediaType(AVMediaTypeVideo, kCMPersistentTrackID_Invalid) else null
             val compAudioTrack = if (audioTracks.isNotEmpty()) composition.addMutableTrackWithMediaType(AVMediaTypeAudio, kCMPersistentTrackID_Invalid) else null
+
+            // Copy transform from original track to preserve rotation/orientation
+            if (compVideoTrack != null && videoTracks.isNotEmpty()) {
+                compVideoTrack.preferredTransform = videoTracks.first().preferredTransform
+            }
 
             for (segment in segmentsToKeep) {
                 val start = CMTimeMake(segment.startMs, 1000)
@@ -94,6 +104,21 @@ actual class VideoTrimmer actual constructor() {
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    actual suspend fun getVideoDurationMs(videoPath: String): Long = withContext(Dispatchers.IO) {
+        try {
+            val resolvedPath = resolveVideoPath(videoPath)
+            val url = if (resolvedPath.startsWith("/")) NSURL.fileURLWithPath(resolvedPath) else NSURL.URLWithString(resolvedPath)
+            if (url == null) return@withContext 0L
+
+            val asset = AVURLAsset(uRL = url, options = null)
+            val duration = asset.duration
+            val seconds = CMTimeGetSeconds(duration)
+            if (seconds.isNaN()) 0L else (seconds * 1000).toLong()
+        } catch (e: Exception) {
+            0L
         }
     }
 }

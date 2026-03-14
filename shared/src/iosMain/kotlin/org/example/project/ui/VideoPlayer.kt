@@ -20,6 +20,7 @@ import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMake
 import platform.Foundation.NSURL
 import platform.UIKit.UIViewController
+import org.example.project.domain.resolveVideoPath
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -31,10 +32,11 @@ actual fun VideoPlayer(
     onTimeUpdate: (Long) -> Unit
 ) {
     val player = remember(url) {
-        val nsUrl = if (url.startsWith("/")) {
-            NSURL.fileURLWithPath(url)
+        val resolvedUrl = resolveVideoPath(url)
+        val nsUrl = if (resolvedUrl.startsWith("/")) {
+            NSURL.fileURLWithPath(resolvedUrl)
         } else {
-            NSURL.URLWithString(url)
+            NSURL.URLWithString(resolvedUrl)
         }
         if (nsUrl != null) AVPlayer(uRL = nsUrl) else AVPlayer()
     }

@@ -16,4 +16,11 @@ expect class VideoTrimmer() {
      * @return true if successful, false otherwise.
      */
     suspend fun trimVideo(inputPath: String, outputPath: String, segmentsToKeep: List<VideoTrimSegment>): Boolean
+
+    /**
+     * Gets the total duration of the video at the given path in milliseconds.
+     * @param videoPath The absolute path to the video.
+     * @return Duration in milliseconds, or 0 if it cannot be determined.
+     */
+    suspend fun getVideoDurationMs(videoPath: String): Long
 }

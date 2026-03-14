@@ -59,6 +59,9 @@ import org.example.project.ui.EditingStudioScreen
 import org.example.project.ui.EditingStudioViewModel
 import org.example.project.ui.ArchivesScreen
 import org.example.project.ui.ArchivesViewModel
+import org.example.project.domain.rememberVideoPublisher
+import org.example.project.ui.PublishingStudioScreen
+import org.example.project.ui.PublishingStudioViewModel
 import org.example.project.ui.RecordingStudioViewModel
 import org.example.project.ui.WritersRoomScreen
 import org.example.project.ui.WritersRoomViewModel
@@ -284,6 +287,10 @@ fun App(database: AppDatabase? = null) {
                                     RecordingStudioScreen(
                                         viewModel = viewModel,
                                         onBack = onBack,
+                                        onHome = {
+                                            backStack.removeAll { true }
+                                            backStack.add(Screen.Home)
+                                        },
                                         onNavigateToEditingStudio = { backStack.add(Screen.EditingStudio) }
                                     )
                                 } else {
@@ -305,6 +312,10 @@ fun App(database: AppDatabase? = null) {
                                                 backStack.add(Screen.RecordingStudio)
                                             }
                                         },
+                                        onHome = {
+                                            backStack.removeAll { true }
+                                            backStack.add(Screen.Home)
+                                        },
                                         onNavigateToPublishingStudio = { backStack.add(Screen.PublishingStudio) }
                                     )
                                 } else {
@@ -315,10 +326,32 @@ fun App(database: AppDatabase? = null) {
                                 }
                             }
                             entry<Screen.PublishingStudio> { destination ->
-                                DetailScreen(
-                                    screenName = destination.TITLE,
-                                    onBack = onBack,
-                                )
+                                if (database != null) {
+                                    val videoPublisher = rememberVideoPublisher()
+                                    val viewModel = viewModel { PublishingStudioViewModel(database.scriptDao(), videoPublisher) }
+                                    PublishingStudioScreen(
+                                        viewModel = viewModel,
+                                        onBack = {
+                                            backStack.removeLast()
+                                            if (backStack.last() != Screen.EditingStudio) {
+                                                backStack.add(Screen.EditingStudio)
+                                            }
+                                        },
+                                        onHome = {
+                                            backStack.removeAll { true }
+                                            backStack.add(Screen.Home)
+                                        },
+                                        onFinish = {
+                                            backStack.removeAll { true }
+                                            backStack.add(Screen.Home)
+                                        }
+                                    )
+                                } else {
+                                    DetailScreen(
+                                        screenName = destination.TITLE + " (No DB)",
+                                        onBack = onBack,
+                                    )
+                                }
                             }
                             entry<Screen.Archives> {
                                 if (database != null) {

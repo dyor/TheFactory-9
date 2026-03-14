@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 fun EditingStudioScreen(
     viewModel: EditingStudioViewModel,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     onNavigateToPublishingStudio: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -114,11 +115,15 @@ fun EditingStudioScreen(
                     ) {
                         Button(
                             onClick = { viewModel.saveModifications() },
-                            enabled = uiState.segments.any { it.markedForRemoval } && !uiState.isSaved,
+                            enabled = uiState.segments.any { it.markedForRemoval } && !uiState.isSaved && !uiState.isSaving,
                             modifier = Modifier.weight(1f).padding(end = 8.dp),
                             colors = if (uiState.isSaved) ButtonDefaults.filledTonalButtonColors() else ButtonDefaults.buttonColors()
                         ) {
-                            Text(if (uiState.isSaved) "Saved!" else "Save Edits")
+                            if (uiState.isSaving) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text(if (uiState.isSaved) "Saved!" else "Save Edits")
+                            }
                         }
 
                         Button(
@@ -127,7 +132,7 @@ fun EditingStudioScreen(
                             modifier = Modifier.weight(1f).padding(start = 8.dp),
                             colors = ButtonDefaults.filledTonalButtonColors()
                         ) {
-                            Text("Restore Original")
+                            Text("Reset")
                         }
                     }
                 }
@@ -148,12 +153,24 @@ fun EditingStudioScreen(
                         }
                     }
 
-                    Button(
-                        onClick = onBack,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        colors = ButtonDefaults.filledTonalButtonColors()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text("Back to Recording")
+                        Button(
+                            onClick = onBack,
+                            modifier = Modifier.weight(1f).padding(end = 4.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors()
+                        ) {
+                            Text("Go Back")
+                        }
+                        Button(
+                            onClick = onHome,
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors()
+                        ) {
+                            Text("Go Home")
+                        }
                     }
                 }
             }

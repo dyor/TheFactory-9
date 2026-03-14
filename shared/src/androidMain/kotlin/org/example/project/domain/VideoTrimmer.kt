@@ -44,6 +44,19 @@ actual class VideoTrimmer actual constructor() {
                 }
             }
 
+            // Copy rotation metadata
+            try {
+                val retriever = android.media.MediaMetadataRetriever()
+                retriever.setDataSource(inputPath)
+                val rotation = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull()
+                if (rotation != null) {
+                    muxer.setOrientationHint(rotation)
+                }
+                retriever.release()
+            } catch (e: Exception) {
+                Log.e("VideoTrimmer", "Failed to set orientation hint", e)
+            }
+
             muxer.start()
 
             val maxChunkSize = 1024 * 1024 * 2 // 2MB
@@ -114,6 +127,18 @@ actual class VideoTrimmer actual constructor() {
             e.printStackTrace()
             Log.e("VideoTrimmer", "Error trimming video", e)
             false
+        }
+    }
+
+    actual suspend fun getVideoDurationMs(videoPath: String): Long = withContext(Dispatchers.IO) {
+        try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(videoPath)
+            val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+            retriever.release()
+            durationStr?.toLongOrNull() ?: 0L
+        } catch(e: Exception) {
+            0L
         }
     }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 fun RecordingStudioScreen(
     viewModel: RecordingStudioViewModel,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     onNavigateToEditingStudio: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -41,6 +42,7 @@ fun RecordingStudioScreen(
         onResetRecording = { viewModel.resetRecording() },
         onAdvanceToEditingStage = { viewModel.advanceToEditingStage() },
         onBack = onBack,
+        onHome = onHome,
         onNavigateToEditingStudio = onNavigateToEditingStudio,
         onVideoResult = { path, error -> viewModel.setVideoResult(path, error) }
     )
@@ -54,6 +56,7 @@ fun RecordingStudioScreenContent(
     onResetRecording: () -> Unit,
     onAdvanceToEditingStage: () -> Unit,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     onNavigateToEditingStudio: () -> Unit,
     onVideoResult: (String?, String?) -> Unit
 ) {
@@ -155,15 +158,7 @@ fun RecordingStudioScreenContent(
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     if (uiState.recordingFinished) {
-                                        if (uiState.savedVideoPath != null) {
-                                            Text(
-                                                "Video saved to Factory-9 Archives\nPath: ${uiState.savedVideoPath}", 
-                                                color = Color.Green, 
-                                                fontWeight = FontWeight.Bold,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier.padding(bottom = 8.dp)
-                                            )
-                                        } else if (uiState.videoError != null) {
+                                        if (uiState.videoError != null) {
                                             Text(
                                                 "Video Recording Failed:\n${uiState.videoError}", 
                                                 color = Color.Red, 
@@ -171,22 +166,23 @@ fun RecordingStudioScreenContent(
                                                 textAlign = TextAlign.Center,
                                                 modifier = Modifier.padding(bottom = 8.dp)
                                             )
-                                        } else {
-                                            Text(
-                                                "Processing video...", 
-                                                color = Color.White, 
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(bottom = 8.dp)
-                                            )
                                         }
-                                        Button(onClick = onResetRecording) {
+
+                                        Button(
+                                            onClick = onResetRecording,
+                                            modifier = Modifier.fillMaxWidth(0.8f),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                        ) {
                                             Text("Re-record")
                                         }
                                         Spacer(Modifier.height(16.dp))
-                                        Button(onClick = { 
-                                            onAdvanceToEditingStage()
-                                            onNavigateToEditingStudio() 
-                                        }) {
+                                        Button(
+                                            onClick = { 
+                                                onAdvanceToEditingStage()
+                                                onNavigateToEditingStudio() 
+                                            },
+                                            modifier = Modifier.fillMaxWidth(0.8f)
+                                        ) {
                                             Text("Go to Editing Studio")
                                         }
                                     } else if (!uiState.isRecording && uiState.countdown == 0) {
@@ -198,8 +194,24 @@ fun RecordingStudioScreenContent(
                                     }
                                     
                                     Spacer(Modifier.height(16.dp))
-                                    Button(onClick = onBack) {
-                                        Text("Go Back")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(0.8f),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        Button(
+                                            onClick = onBack,
+                                            modifier = Modifier.weight(1f).padding(end = 4.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors()
+                                        ) {
+                                            Text("Go Back")
+                                        }
+                                        Button(
+                                            onClick = onHome,
+                                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors()
+                                        ) {
+                                            Text("Go Home")
+                                        }
                                     }
                                 }
                             }
@@ -270,6 +282,7 @@ fun RecordingStudioScreenPreview() {
             onResetRecording = {},
             onAdvanceToEditingStage = {},
             onBack = {},
+            onHome = {},
             onNavigateToEditingStudio = {},
             onVideoResult = { _, _ -> }
         )

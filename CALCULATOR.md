@@ -9,18 +9,18 @@ Progress is calculated by evaluating the completed (`- [x]`) versus pending (`- 
 |-------|-------------|-----------|---------|--------------|
 | Phase 1: Foundation & Infrastructure | 10 | 10 | 0 | 100% |
 | Phase 2: Core Features & Logic | 7 | 7 | 0 | 100% |
-| Phase 3: Hardware / Native Integrations | 17 | 12 | 5 | 70.59% |
+| Phase 3: Hardware / Native Integrations | 17 | 14 | 3 | 82.3% |
 | Phase 4: The Final Cut | 6 | 0 | 6 | 0% |
 
 ## Actionable Insights
 *   **Current Phase:** Phase 3: Hardware / Native Integrations (Production)
-*   **Next Task:** `- [x] **Agent Action**: Implement "Active Script" logic: Update `Script` entity with `isActive` field, add `clearActiveScript()` and `setActiveScript()` to `ScriptDao`, and modify `WritersRoomViewModel.saveScript()` to set the newly saved script as active.`
-*   **Pending Breakdown:** 0 User Actions, 5 Agent Actions, 3 Validations remaining.
+*   **Next Task:** `- [ ] **Agent Action**: Provide an option to publish the video on YouTube shorts. It is ok to use simple shortcuts - like saving this video to the native Photo app and opening YouTube (where the user can upload the video from their native Photo app).`
+*   **Pending Breakdown:** 1 User Actions, 5 Agent Actions, 3 Validations remaining.
 
 ---
 
 ## Overall Project Progress
 *   **Total Tasks**: 40
-*   **Completed Tasks**: 29
-*   **Pending Tasks**: 11
-*   **Overall Completion**: 72.5%
+*   **Completed Tasks**: 31
+*   **Pending Tasks**: 9
+*   **Overall Completion**: 77.5%
