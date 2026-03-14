@@ -99,6 +99,10 @@ kotlin {
             // Datetime
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
+            
+            // CameraK
+            implementation(libs.camerak)
+            implementation(libs.camerak.video)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

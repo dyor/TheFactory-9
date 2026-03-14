@@ -23,6 +23,22 @@ This document captures key learnings and patterns for working with this KMP code
     *   **Alternative**: Use `compose-material-icons-extended` dependency for standard icons (`Icons.Filled.*`).
     *   **Avoid**: Relying solely on Text Emojis for critical UI elements.
 
+### Keyboard Management (iOS & Android)
+*   **Problem**: Multi-line text inputs (like `OutlinedTextField`) keep the software keyboard open when clicking outside of them, which can block vital UI buttons (e.g., Save, Next) at the bottom of the screen. This is particularly noticeable on iOS.
+*   **Solution**: Wrap your screen content in a layout (like a `Box`) and use `LocalFocusManager.current` combined with a pointer input tap detector to clear focus when the user taps outside the text field.
+    ```kotlin
+    val focusManager = LocalFocusManager.current
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
+    ) { ... }
+    ```
+
 ## 2. Architecture & Dependencies
 
 ### Shared Logic

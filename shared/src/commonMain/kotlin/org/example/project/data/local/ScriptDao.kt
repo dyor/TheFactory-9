@@ -31,6 +31,12 @@ interface ScriptDao {
     @Query("UPDATE scripts SET isActive = 1 WHERE id = :scriptId")
     suspend fun setActiveScript(scriptId: Long)
 
+    @Query("UPDATE scripts SET currentStage = :stage WHERE id = :scriptId")
+    suspend fun updateScriptStage(scriptId: Long, stage: org.example.project.domain.model.ScriptStage)
+
+    @Query("UPDATE scripts SET videoPath = :path WHERE id = :scriptId")
+    suspend fun updateScriptVideoPath(scriptId: Long, path: String)
+
     @Query("SELECT * FROM scripts WHERE isActive = 1 LIMIT 1")
     fun getActiveScript(): Flow<Script?>
 }

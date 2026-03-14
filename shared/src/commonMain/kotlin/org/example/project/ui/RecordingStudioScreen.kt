@@ -1,11 +1,7 @@
 package org.example.project.ui
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +15,16 @@ import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Permission
 import com.mohamedrejeb.calf.permissions.PermissionStatus
 import com.mohamedrejeb.calf.permissions.rememberPermissionState
+import com.kashif.cameraK.compose.rememberCameraKState
+import com.kashif.cameraK.compose.CameraKScreen
+import com.kashif.cameraK.state.CameraConfiguration
+import com.kashif.cameraK.enums.CameraLens
+import com.kashif.cameraK.enums.Directory
+import com.kashif.videorecorderplugin.rememberVideoRecorderPlugin
+import com.kashif.cameraK.state.CameraKEvent
+import com.kashif.cameraK.video.VideoConfiguration
+import com.kashif.cameraK.video.VideoCaptureResult
+import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -28,74 +34,176 @@ fun RecordingStudioScreen(
     onNavigateToEditingStudio: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    RecordingStudioScreenContent(
+        uiState = uiState,
+        onStartRecording = { viewModel.startRecording() },
+        onResetRecording = { viewModel.resetRecording() },
+        onAdvanceToEditingStage = { viewModel.advanceToEditingStage() },
+        onBack = onBack,
+        onNavigateToEditingStudio = onNavigateToEditingStudio,
+        onVideoResult = { path, error -> viewModel.setVideoResult(path, error) }
+    )
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun RecordingStudioScreenContent(
+    uiState: RecordingStudioUiState,
+    onStartRecording: () -> Unit,
+    onResetRecording: () -> Unit,
+    onAdvanceToEditingStage: () -> Unit,
+    onBack: () -> Unit,
+    onNavigateToEditingStudio: () -> Unit,
+    onVideoResult: (String?, String?) -> Unit
+) {
     val cameraPermissionState = rememberPermissionState(Permission.Camera)
     val micPermissionState = rememberPermissionState(Permission.RecordAudio)
+    
+    val videoPlugin = rememberVideoRecorderPlugin(config = VideoConfiguration(enableAudio = false))
+    val cameraState by rememberCameraKState(
+        config = CameraConfiguration(cameraLens = CameraLens.FRONT, directory = Directory.DOCUMENTS),
+        setupPlugins = { it.attachPlugin(videoPlugin) }
+    )
+
+    LaunchedEffect(videoPlugin) {
+        videoPlugin.recordingEvents.collect { event ->
+            when (event) {
+                is CameraKEvent.RecordingStopped -> {
+                    val result = event.result
+                    if (result is VideoCaptureResult.Success) {
+                        onVideoResult(result.filePath, null)
+                    } else if (result is VideoCaptureResult.Error) {
+                        onVideoResult(null, result.exception.message)
+                    }
+                }
+                is CameraKEvent.RecordingFailed -> {
+                    onVideoResult(null, event.exception.message)
+                }
+                else -> {}
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (cameraPermissionState.status != PermissionStatus.Granted) cameraPermissionState.launchPermissionRequest()
         if (micPermissionState.status != PermissionStatus.Granted) micPermissionState.launchPermissionRequest()
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        if (cameraPermissionState.status == PermissionStatus.Granted) {
-            CameraPreview(modifier = Modifier.fillMaxSize().clickable(enabled = false, onClick = {}))
+    LaunchedEffect(uiState.isRecording, uiState.recordingFinished) {
+        if (uiState.isRecording) {
+            videoPlugin.startRecording()
+        } else if (uiState.recordingFinished) {
+            videoPlugin.stopRecording()
         }
+    }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top Half: Teleprompter
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (uiState.errorMessage != null) {
-                    Text(uiState.errorMessage!!, color = Color.Red, fontSize = 20.sp)
-                } else if (uiState.countdown > 0) {
-                    Text(
-                        uiState.countdown.toString(),
-                        color = Color.White,
-                        fontSize = 80.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                } else if (uiState.isRecording || uiState.recordingFinished) {
-                    TeleprompterText(
-                        words = uiState.words,
-                        currentWordIndex = uiState.currentWordIndex
-                    )
-                } else {
-                    Text("Ready to Record", color = Color.White, fontSize = 24.sp)
-                }
-            }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Card(
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxHeight(0.9f)
+                .padding(top = 64.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Transparent, // Made transparent to ensure camera view is visible
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (cameraPermissionState.status == PermissionStatus.Granted) {
+                    CameraKScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraState = cameraState,
+                        showPreview = true
+                    ) { readyState ->
+                        // The camera is ready! Here we overlay the UI elements
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // Top Half: Teleprompter
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                if (uiState.errorMessage != null) {
+                                    Text(uiState.errorMessage, color = Color.Red, fontSize = 20.sp)
+                                } else if (uiState.countdown > 0) {
+                                    Text(
+                                        uiState.countdown.toString(),
+                                        color = Color.White,
+                                        fontSize = 80.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else if (uiState.isRecording || uiState.recordingFinished) {
+                                    TeleprompterText(
+                                        timeBlocks = uiState.timeBlocks,
+                                        elapsedTime = uiState.elapsedTime
+                                    )
+                                } else {
+                                    Text("Ready to Record", color = Color.White, fontSize = 24.sp)
+                                }
+                            }
 
-            // Bottom Half: Controls
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (uiState.recordingFinished) {
-                        Button(onClick = { viewModel.resetRecording() }) {
-                            Text("Re-record")
+                            // Bottom Half: Controls
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.BottomCenter
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    if (uiState.recordingFinished) {
+                                        if (uiState.savedVideoPath != null) {
+                                            Text(
+                                                "Video saved to Factory-9 Archives\nPath: ${uiState.savedVideoPath}", 
+                                                color = Color.Green, 
+                                                fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                        } else if (uiState.videoError != null) {
+                                            Text(
+                                                "Video Recording Failed:\n${uiState.videoError}", 
+                                                color = Color.Red, 
+                                                fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                        } else {
+                                            Text(
+                                                "Processing video...", 
+                                                color = Color.White, 
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                        }
+                                        Button(onClick = onResetRecording) {
+                                            Text("Re-record")
+                                        }
+                                        Spacer(Modifier.height(16.dp))
+                                        Button(onClick = { 
+                                            onAdvanceToEditingStage()
+                                            onNavigateToEditingStudio() 
+                                        }) {
+                                            Text("Go to Editing Studio")
+                                        }
+                                    } else if (!uiState.isRecording && uiState.countdown == 0) {
+                                        Button(onClick = {
+                                            onStartRecording()
+                                        }) {
+                                            Text("Start Recording")
+                                        }
+                                    }
+                                    
+                                    Spacer(Modifier.height(16.dp))
+                                    Button(onClick = onBack) {
+                                        Text("Go Back")
+                                    }
+                                }
+                            }
                         }
-                        Spacer(Modifier.height(16.dp))
-                        Button(onClick = onNavigateToEditingStudio) {
-                            Text("Go to Editing Studio")
-                        }
-                    } else if (!uiState.isRecording && uiState.countdown == 0) {
-                        Button(onClick = { viewModel.startRecording() }) {
-                            Text("Start Recording")
-                        }
-                    }
-                    
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = onBack) {
-                        Text("Go Back")
                     }
                 }
             }
@@ -104,32 +212,66 @@ fun RecordingStudioScreen(
 }
 
 @Composable
-fun TeleprompterText(words: List<String>, currentWordIndex: Int) {
-    val listState = rememberLazyListState()
+fun TeleprompterText(timeBlocks: List<TeleprompterBlock>, elapsedTime: Int) {
+    // Find the block that should be currently displayed based on elapsed time.
+    // If we are between blocks or just finished, find the most recent or current one.
+    val activeBlock = timeBlocks.find { elapsedTime >= it.startTime && elapsedTime < it.endTime }
+        ?: timeBlocks.lastOrNull { elapsedTime >= it.endTime }
 
-    LaunchedEffect(currentWordIndex) {
-        if (currentWordIndex > 0 && currentWordIndex < words.size) {
-            listState.animateScrollToItem(currentWordIndex)
-        }
-    }
-
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        contentPadding = PaddingValues(vertical = 100.dp)
+        verticalArrangement = Arrangement.Top
     ) {
-        itemsIndexed(words) { index, word ->
-            val color = if (index < currentWordIndex) Color.Gray else if (index == currentWordIndex) Color.White else Color.LightGray
-            val size = if (index == currentWordIndex) 32.sp else 24.sp
+        if (activeBlock != null) {
             Text(
-                text = word,
-                color = color,
-                fontSize = size,
-                fontWeight = if (index == currentWordIndex) FontWeight.Bold else FontWeight.Normal,
+                text = "${activeBlock.startTime}s - ${activeBlock.endTime}s",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = activeBlock.text,
+                color = Color.White,
+                fontSize = 20.sp, // Decreased font size for readability and moved to top
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.fillMaxWidth() // Uses full width
+            )
+        } else {
+             Text(
+                text = "Get ready...",
+                color = Color.Gray,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+@Preview
+@Composable
+fun RecordingStudioScreenPreview() {
+    MaterialTheme {
+        RecordingStudioScreenContent(
+            uiState = RecordingStudioUiState(
+                timeBlocks = listOf(
+                    TeleprompterBlock(0, 5, "Hello World!"),
+                    TeleprompterBlock(5, 10, "Welcome to the recording studio.")
+                ),
+                countdown = 0,
+                isRecording = true,
+                elapsedTime = 2,
+                recordingFinished = false,
+                errorMessage = null
+            ),
+            onStartRecording = {},
+            onResetRecording = {},
+            onAdvanceToEditingStage = {},
+            onBack = {},
+            onNavigateToEditingStudio = {},
+            onVideoResult = { _, _ -> }
+        )
     }
 }

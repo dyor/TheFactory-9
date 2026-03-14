@@ -30,6 +30,7 @@ kotlinx-datetime = "0.6.1"
 kotlinx-serialization = "1.10.0"
 camerax = "1.4.0"
 buildconfig = "3.1.0"
+camerak = "0.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -86,6 +87,8 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "camerax" }
+camerak = { module = "io.github.kashif-mehmood-km:camerak", version.ref = "camerak" }
+camerak-video = { module = "io.github.kashif-mehmood-km:video_recorder_plugin", version.ref = "camerak" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

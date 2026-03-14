@@ -51,9 +51,9 @@ Goal: Implement device-specific features (Camera, Audio, Location, etc.).
 - [x] **Agent Action**: Implement `RecordingStudioViewModel` to manage a 5-second countdown and teleprompter logic that displays 3 lines at a time and advances them to finish the script in 60 seconds. The `RecordingStudioScreen` should observe the active script from the ViewModel.
 - [x] **Agent Action**: When the recording is done, allow user to re-record. Also include navigation to go back (to Writer's Room) and forward (to Editing Studio).
 - [x] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Recording Studio complete"`
-- [ ] **Agent Action**: For the Editing Studio, allow the user to mark sections of the video for removal (e.g., where there was white space or where they made a mistake). Include a Save button that stares the modified video and a Restore button that returns the original video.
-- [ ] **Agent Action**: Include navigation for returning to the Editing Studio and advancing to the Publishing room.
-- [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Editing Studio complete"`
+- [x] **Agent Action**: For the Editing Studio, allow the user to mark sections of the video for removal (e.g., where there was white space or where they made a mistake). Include a Save button that stares the modified video and a Restore button that returns the original video.
+- [x] **Agent Action**: Include navigation for returning to the Editing Studio and advancing to the Publishing room.
+- [x] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Editing Studio complete"`
 ### Step 2.3: YouTube Integration
 - [ ] **Agent Action**: Provide an option to publish the video on YouTube shorts. It is ok to use simple shortcuts - like saving this video to the native Photo app and opening YouTube (where the user can upload the video from their native Photo app). 
 - [ ] **Validation**: Ensure that the described functionality works on Android and iOS and `git commit -m "Phase 3: Publishing Studio complete"`
