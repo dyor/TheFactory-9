@@ -14,7 +14,7 @@ Break the project down into logical, sequential phases (e.g., Phase 1: Foundatio
 Each Phase must have a clear `Goal:`.
 
 ### 3. Actionable Task Lists
-Within each phase, define steps with specific checklist items.
+Within each phase, define numbered steps with specific checklist items.
 Prefix each task with the responsible party to ensure clear separation of duties:
 *   `**User Action**:` For manual steps the human must take (e.g., running `git init`, testing on a physical device, adding visual assets, creating external accounts).
 *   `**Agent Action**:` For code generation, refactoring, build configuration, and file modifications the AI will perform.
@@ -102,6 +102,21 @@ Goal: Polish, optimize, and prepare for production.
 - [ ] **User Action**: Full regression test of the application.
 - [ ] **Validation**: `git add . && git commit -m "Phase 4: Final Cut"`
 - [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect 100% completion.
+
+## Phase 5: Factory-Specific Polish
+Goal: Refine the user experience with precise video editing, dynamic durations, and finalized branding.
+
+- [ ] **Agent Action**: Implement a Target Duration slider (5s to 60s) in the Writer's Room and update the Gemini prompt to strictly adhere to the selected duration. Update `Script` entity to store this duration.
+- [ ] **Agent Action**: Upgrade the VideoPlayer to support precise seeking (`seekRequest`) and playback state (`isPlaying`) across Android (`VideoView`) and iOS (`AVPlayerViewController`). Add `onTimeUpdate` and `onCompletion` callbacks.
+- [ ] **Agent Action**: Implement `resolveVideoPath` expect/actual to handle iOS Simulator UUID changes across rebuilds (searching `NSDocumentDirectory` and `NSTemporaryDirectory`).
+- [ ] **Agent Action**: Refactor the Editing Studio timeline to dynamically generate exactly one block per second of the recorded video using `MediaMetadataRetriever` (Android) and `AVURLAsset` (iOS) to fetch the actual video duration.
+- [ ] **Agent Action**: Implement a "Fine-tune" modal in the Editing Studio allowing tenth-of-a-second skipping granularity (0.0s to 0.9s). Ensure it overlays cleanly at the bottom, auto-pauses the video when open, and seeks directly to the tapped tenth.
+- [ ] **Agent Action**: Add a "Preview without Skipped Frames" button that instantly seeks to the first unskipped tenth of a second and plays through, auto-skipping removed segments and reverting state upon completion.
+- [ ] **Agent Action**: Implement native `VideoTrimmer` (expect/actual) using Android `MediaExtractor`/`MediaMuxer` and iOS `AVMutableComposition` to trim and stitch unskipped tenths of a second into a final `_trimmed.mp4` file without heavy re-encoding. Ensure video rotation/transform metadata is preserved.
+- [ ] **Agent Action**: Standardize bottom navigation across all studio screens to have a consistent "Go Back" and "Go Home" row. Ensure correct back-stack popping logic.
+- [ ] **Agent Action**: Rebrand the app from "KotlinProject" to "The Factory" in Android (`strings.xml`) and iOS (`Info.plist`).
+- [ ] **Agent Action**: Update the iOS and Android app icons using the `film_noir.png` asset (e.g., using `sips` for macOS to generate `app-icon-1024.png`).
+- [ ] **Agent Action**: Update `CALCULATOR.md` by executing the `SKILLS/CALCULATOR_SKILL.md` to reflect Phase 5 completion.
 ```
 
 ## Execution Protocol

@@ -15,14 +15,23 @@ import kotlinx.coroutines.flow.firstOrNull
 // A representation of a 1-second video segment
 data class VideoSegment(
     val second: Int, // 1 to 60
-    val markedForRemoval: Boolean = false
-)
+    val skippedTenths: Set<Int> = emptySet()
+) {
+    val isFullySkipped get() = skippedTenths.size == 10
+    val isPartiallySkipped get() = skippedTenths.isNotEmpty() && skippedTenths.size < 10
+    val isNotSkipped get() = skippedTenths.isEmpty()
+}
 
 data class EditingStudioUiState(
     val segments: List<VideoSegment> = emptyList(),
     val isSaved: Boolean = false,
     val isSaving: Boolean = false,
-    val videoPath: String? = null
+    val videoPath: String? = null,
+    val currentPlaybackSecond: Int = 1,
+    val currentPlaybackTenth: Int = 0,
+    val isPreviewMode: Boolean = false,
+    val selectedSegmentForDetail: Int? = null,
+    val isPlaying: Boolean = true
 )
 
 class EditingStudioViewModel(
@@ -43,13 +52,21 @@ class EditingStudioViewModel(
                     _uiState.value = _uiState.value.copy(
                         videoPath = script.videoPath
                     )
+                    if (script.videoPath != null && _uiState.value.segments.isEmpty()) {
+                        val durationMs = videoTrimmer.getVideoDurationMs(script.videoPath)
+                        if (durationMs > 0) {
+                            val numSeconds = kotlin.math.ceil(durationMs / 1000.0).toInt()
+                            val initialSegments = (1..numSeconds).map { VideoSegment(second = it) }
+                            _uiState.value = _uiState.value.copy(segments = initialSegments)
+                        } else {
+                            // Fallback
+                            val initialSegments = (1..60).map { VideoSegment(second = it) }
+                            _uiState.value = _uiState.value.copy(segments = initialSegments)
+                        }
+                    }
                 }
             }
         }
-
-        // Initialize 60 one-second segments
-        val initialSegments = (1..60).map { VideoSegment(second = it) }
-        _uiState.value = _uiState.value.copy(segments = initialSegments)
     }
 
     fun clearSeekRequest() {
@@ -58,41 +75,147 @@ class EditingStudioViewModel(
 
     fun onTimeUpdate(currentPositionMs: Long) {
         if (_seekRequest.value != null) return // Already handling a seek
+        if (!_uiState.value.isPlaying) return // Do not auto-close or jump if paused by the modal
         
         val currentSecond = (currentPositionMs / 1000).toInt() + 1
-        val segments = _uiState.value.segments
-        val segment = segments.find { it.second == currentSecond }
+        val currentTenth = ((currentPositionMs % 1000) / 100).toInt()
         
-        if (segment?.markedForRemoval == true) {
-            val nextUnskipped = segments.find { it.second > currentSecond && !it.markedForRemoval }
-            if (nextUnskipped != null) {
-                // Seek to the start of the next unskipped second, with a tiny 50ms buffer to ensure we are inside it
-                val nextStartMs = (nextUnskipped.second - 1) * 1000L + 50L
-                _seekRequest.value = nextStartMs
+        _uiState.value = _uiState.value.copy(
+            currentPlaybackSecond = currentSecond,
+            currentPlaybackTenth = currentTenth
+        )
+
+        // Close the modal if we naturally play into a new second
+        if (_uiState.value.selectedSegmentForDetail != null && _uiState.value.selectedSegmentForDetail != currentSecond) {
+            closeSegmentDetail()
+        }
+
+        if (_uiState.value.isPreviewMode) {
+            val maxMs = _uiState.value.segments.maxOfOrNull { it.second }?.times(1000L) ?: return
+            if (currentPositionMs >= maxMs - 100) {
+                // Video finished playing
+                _uiState.value = _uiState.value.copy(isPreviewMode = false, isPlaying = false)
+                return
+            }
+
+            val segments = _uiState.value.segments
+            val segment = segments.find { it.second == currentSecond }
+            if (segment?.skippedTenths?.contains(currentTenth) == true) {
+                val nextStartMs = findNextUnskippedMs(currentPositionMs)
+                if (nextStartMs != null) {
+                    _seekRequest.value = nextStartMs
+                } else {
+                    // Reached the end of unskipped content
+                    _uiState.value = _uiState.value.copy(isPreviewMode = false, isPlaying = false)
+                }
             }
         }
     }
 
-    fun toggleRemovalMarker(second: Int) {
-        val oldSegment = _uiState.value.segments.find { it.second == second } ?: return
-        val isNowMarked = !oldSegment.markedForRemoval
-
-        val updatedSegments = _uiState.value.segments.map {
-            if (it.second == second) it.copy(markedForRemoval = isNowMarked) else it
+    fun onVideoCompletion() {
+        if (_uiState.value.isPreviewMode) {
+            _uiState.value = _uiState.value.copy(isPreviewMode = false, isPlaying = false)
         }
-        _uiState.value = _uiState.value.copy(segments = updatedSegments, isSaved = false)
+    }
 
-        if (isNowMarked) {
-            // We just skipped it. Advance to start of next unskipped.
-            val nextUnskipped = updatedSegments.find { it.second > second && !it.markedForRemoval }
-            if (nextUnskipped != null) {
-                val nextStartMs = (nextUnskipped.second - 1) * 1000L + 50L
-                _seekRequest.value = nextStartMs
+    private fun findNextUnskippedMs(fromMs: Long): Long? {
+        var checkMs = fromMs - (fromMs % 100) + 100 // start checking next tenth
+        val maxMs = _uiState.value.segments.maxOfOrNull { it.second }?.times(1000L) ?: return null
+        while (checkMs < maxMs) {
+            val sec = (checkMs / 1000).toInt() + 1
+            val ten = ((checkMs % 1000) / 100).toInt()
+            val seg = _uiState.value.segments.find { it.second == sec }
+            if (seg == null || !seg.skippedTenths.contains(ten)) {
+                return checkMs
             }
+            checkMs += 100
+        }
+        return null
+    }
+
+    fun openSegmentDetail(second: Int) {
+        if (_uiState.value.selectedSegmentForDetail == second) {
+            closeSegmentDetail()
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            selectedSegmentForDetail = second,
+            isPlaying = false, // Pause when opening modal
+            currentPlaybackSecond = second, // Snap purple border
+            currentPlaybackTenth = 0
+        )
+        // Advance video to the start of the selected second
+        _seekRequest.value = (second - 1) * 1000L
+    }
+
+    fun closeSegmentDetail() {
+        val sec = _uiState.value.selectedSegmentForDetail
+        _uiState.value = _uiState.value.copy(selectedSegmentForDetail = null, isPlaying = true)
+        
+        if (sec != null) {
+             _seekRequest.value = (sec - 1) * 1000L
+        }
+    }
+
+    fun toggleTenthSkipped(second: Int, tenth: Int) {
+        val segments = _uiState.value.segments.toMutableList()
+        val index = segments.indexOfFirst { it.second == second }
+        if (index != -1) {
+            val segment = segments[index]
+            val newTenths = segment.skippedTenths.toMutableSet()
+            val isSkipping = !newTenths.contains(tenth)
+            if (isSkipping) {
+                newTenths.add(tenth)
+            } else {
+                newTenths.remove(tenth)
+            }
+            segments[index] = segment.copy(skippedTenths = newTenths)
+            
+            // Advance video precisely to the start of that tenth
+            val seekMs = (second - 1) * 1000L + (tenth * 100L)
+            
+            _uiState.value = _uiState.value.copy(
+                segments = segments, 
+                isSaved = false,
+                currentPlaybackSecond = second,
+                currentPlaybackTenth = tenth
+            )
+            
+            _seekRequest.value = seekMs
+        }
+    }
+
+    fun skipAllTenths(second: Int) {
+        updateTenths(second, (0..9).toSet())
+    }
+
+    fun showAllTenths(second: Int) {
+        updateTenths(second, emptySet())
+    }
+
+    private fun updateTenths(second: Int, tenths: Set<Int>) {
+        val segments = _uiState.value.segments.toMutableList()
+        val index = segments.indexOfFirst { it.second == second }
+        if (index != -1) {
+            segments[index] = segments[index].copy(skippedTenths = tenths)
+            _uiState.value = _uiState.value.copy(segments = segments, isSaved = false)
+            _seekRequest.value = (second - 1) * 1000L
+        }
+    }
+
+    fun togglePreviewMode() {
+        val isNowPreview = !_uiState.value.isPreviewMode
+        
+        if (isNowPreview) {
+            val firstUnskippedSec = _uiState.value.segments.find { !it.isFullySkipped }?.second ?: 1
+            val firstUnskippedTen = (0..9).find { !_uiState.value.segments.find { s -> s.second == firstUnskippedSec }!!.skippedTenths.contains(it) } ?: 0
+            val seekMs = (firstUnskippedSec - 1) * 1000L + (firstUnskippedTen * 100L)
+            
+            _uiState.value = _uiState.value.copy(isPreviewMode = true, isPlaying = true)
+            _seekRequest.value = seekMs
         } else {
-            // We just unskipped it. Advance to start of this second.
-            val thisStartMs = (second - 1) * 1000L
-            _seekRequest.value = thisStartMs
+             _uiState.value = _uiState.value.copy(isPreviewMode = false, isPlaying = false)
         }
     }
 
@@ -108,19 +231,22 @@ class EditingStudioViewModel(
             
             // Build continuous ranges to keep
             _uiState.value.segments.forEach { segment ->
-                if (!segment.markedForRemoval) {
-                    val start = (segment.second - 1) * 1000L
-                    val end = segment.second * 1000L
-                    
-                    if (currentStartMs == -1L) {
-                        currentStartMs = start
-                        currentEndMs = end
-                    } else if (start == currentEndMs) {
-                        currentEndMs = end // extend segment
-                    } else {
-                        segmentsToKeep.add(VideoTrimSegment(currentStartMs, currentEndMs))
-                        currentStartMs = start
-                        currentEndMs = end
+                for (tenth in 0..9) {
+                    val isSkipped = segment.skippedTenths.contains(tenth)
+                    if (!isSkipped) {
+                        val start = (segment.second - 1) * 1000L + tenth * 100L
+                        val end = start + 100L
+                        
+                        if (currentStartMs == -1L) {
+                            currentStartMs = start
+                            currentEndMs = end
+                        } else if (start == currentEndMs) {
+                            currentEndMs = end // extend segment
+                        } else {
+                            segmentsToKeep.add(VideoTrimSegment(currentStartMs, currentEndMs))
+                            currentStartMs = start
+                            currentEndMs = end
+                        }
                     }
                 }
             }
@@ -157,7 +283,7 @@ class EditingStudioViewModel(
 
     fun restoreOriginal() {
         // Restore to the original list without any removal markers
-        val resetSegments = _uiState.value.segments.map { it.copy(markedForRemoval = false) }
+        val resetSegments = _uiState.value.segments.map { it.copy(skippedTenths = emptySet()) }
         _uiState.value = _uiState.value.copy(
             segments = resetSegments,
             isSaved = false

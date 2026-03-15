@@ -26,6 +26,7 @@ class WritersRoomViewModel(
                     _uiState.value = _uiState.value.copy(
                         prompt = activeScript.title,
                         generatedScript = activeScript.content,
+                        durationSeconds = activeScript.targetDuration,
                         isSaved = true,
                         savedScriptId = activeScript.id
                     )
@@ -36,6 +37,10 @@ class WritersRoomViewModel(
 
     fun updatePrompt(newPrompt: String) {
         _uiState.value = _uiState.value.copy(prompt = newPrompt)
+    }
+
+    fun updateDuration(seconds: Int) {
+        _uiState.value = _uiState.value.copy(durationSeconds = seconds)
     }
 
     fun updateScriptContent(newContent: String) {
@@ -54,6 +59,7 @@ class WritersRoomViewModel(
             2. The ONLY text allowed is the literal spoken dialogue that the user will read out loud.
             3. You MUST break the text down into 5-second or 10-second segments.
             4. Every single line MUST begin with the time block in the exact format: 'Xs-Ys: '.
+            5. The script MUST be designed to be read in EXACTLY ${_uiState.value.durationSeconds} seconds.
             
             Good Example:
             0s-5s: Hello everyone, today we are learning about YouTube shorts.
@@ -98,7 +104,8 @@ class WritersRoomViewModel(
                 if (existingScript != null) {
                     val updatedScript = existingScript.copy(
                         title = currentPrompt.takeIf { it.isNotBlank() } ?: "Untitled Script",
-                        content = currentScriptText
+                        content = currentScriptText,
+                        targetDuration = _uiState.value.durationSeconds
                     )
                     scriptDao.updateScript(updatedScript)
                     _uiState.value = _uiState.value.copy(isSaved = true)
@@ -108,7 +115,8 @@ class WritersRoomViewModel(
                 val script = Script(
                     title = currentPrompt.takeIf { it.isNotBlank() } ?: "Untitled Script",
                     content = currentScriptText,
-                    createdAt = Clock.System.now().toEpochMilliseconds()
+                    createdAt = Clock.System.now().toEpochMilliseconds(),
+                    targetDuration = _uiState.value.durationSeconds
                 )
                 val id = scriptDao.insertScript(script.copy(isActive = true))
                 scriptDao.clearActiveScript()
@@ -127,7 +135,8 @@ class WritersRoomViewModel(
 }
 
 data class WritersRoomUiState(
-    val prompt: String = "Write a 60-second script for a YouTube short that teaches people how to create compelling YouTube shorts.",
+    val prompt: String = "",
+    val durationSeconds: Int = 60,
     val generatedScript: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,

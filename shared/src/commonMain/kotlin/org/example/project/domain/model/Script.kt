@@ -15,6 +15,7 @@ data class Script(
     val isRecorded: Boolean = false,
     val isActive: Boolean = false,
     val videoPath: String? = null,
+    val targetDuration: Int = 60,
     @ColumnInfo(defaultValue = "WRITERS_ROOM")
     val currentStage: ScriptStage = ScriptStage.WRITERS_ROOM
 )

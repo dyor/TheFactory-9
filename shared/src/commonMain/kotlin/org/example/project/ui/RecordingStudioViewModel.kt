@@ -20,14 +20,18 @@ class RecordingStudioViewModel(
 
     private var teleprompterJob: Job? = null
 
+    private var targetDuration = 60
+
     init {
         viewModelScope.launch {
             scriptDao.getActiveScript().collect {
                 if (it != null) {
+                    targetDuration = it.targetDuration
                     val blocks = parseTimeBlocks(it.content)
                     _uiState.value = _uiState.value.copy(
                         scriptContent = it.content,
                         timeBlocks = blocks,
+                        savedVideoPath = it.videoPath,
                         errorMessage = null
                     )
                 } else {
@@ -76,8 +80,7 @@ class RecordingStudioViewModel(
     private fun startTeleprompter() {
         teleprompterJob?.cancel()
         teleprompterJob = viewModelScope.launch {
-            // Temporary: reduced from 60 to 5 seconds for troubleshooting
-            val totalDuration = 5
+            val totalDuration = targetDuration
             
             while (_uiState.value.elapsedTime < totalDuration) {
                 delay(1000)

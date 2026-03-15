@@ -21,8 +21,10 @@ actual fun VideoPlayer(
     modifier: Modifier, 
     url: String,
     seekRequest: Long?,
+    isPlaying: Boolean,
     onSeekHandled: () -> Unit,
-    onTimeUpdate: (Long) -> Unit
+    onTimeUpdate: (Long) -> Unit,
+    onCompletion: () -> Unit
 ) {
     val context = LocalContext.current
     val videoView = remember {
@@ -33,7 +35,9 @@ actual fun VideoPlayer(
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
-            )
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+            }
         }
     }
 
@@ -49,29 +53,47 @@ actual fun VideoPlayer(
             }
         },
         update = { 
-            val uri = if (url.startsWith("/")) Uri.fromFile(File(url)) else Uri.parse(url)
-            videoView.setVideoURI(uri)
-            videoView.requestFocus()
-            videoView.setOnPreparedListener { mp ->
-                mp.start()
-            }
+            // We intentionally do not call setVideoURI here to prevent recomposition from restarting the video
         }
     )
+
+    LaunchedEffect(url) {
+        val uri = if (url.startsWith("/")) Uri.fromFile(File(url)) else Uri.parse(url)
+        videoView.setVideoURI(uri)
+        videoView.requestFocus()
+        videoView.setOnPreparedListener { mp ->
+            if (isPlaying) mp.start()
+        }
+        videoView.setOnCompletionListener {
+            onCompletion()
+        }
+    }
+
+    LaunchedEffect(isPlaying) {
+        if (isPlaying && !videoView.isPlaying) {
+            videoView.start()
+        } else if (!isPlaying && videoView.isPlaying) {
+            videoView.pause()
+        }
+    }
 
     LaunchedEffect(seekRequest) {
         if (seekRequest != null) {
             videoView.seekTo(seekRequest.toInt())
+            delay(200) // Debounce so stale time updates are ignored
             onSeekHandled()
         }
     }
 
     LaunchedEffect(videoView) {
         while (isActive) {
-            val pos = videoView.currentPosition.toLong()
-            if (pos > 0) {
-                onTimeUpdate(pos)
+            if (videoView.isPlaying) {
+                val pos = videoView.currentPosition.toLong()
+                if (pos >= 0) {
+                    onTimeUpdate(pos)
+                }
             }
-            delay(100)
+            delay(50)
         }
     }
 

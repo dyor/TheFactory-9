@@ -85,7 +85,7 @@ actual class VideoTrimmer actual constructor() {
                 insertTime = CMTimeAdd(insertTime, duration)
             }
 
-            val exportSession = AVAssetExportSession(composition, AVAssetExportPresetHighestQuality)
+            val exportSession = AVAssetExportSession(composition, AVAssetExportPresetPassthrough)
             if (exportSession == null) return@withContext false
 
             exportSession.outputURL = outputUrl
@@ -97,6 +97,7 @@ actual class VideoTrimmer actual constructor() {
                     if (exportSession.status == AVAssetExportSessionStatusCompleted) {
                         continuation.resume(true)
                     } else {
+                        println("Export failed: ${exportSession.error?.localizedDescription}")
                         continuation.resume(false)
                     }
                 }

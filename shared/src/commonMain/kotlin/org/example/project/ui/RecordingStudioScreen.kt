@@ -1,6 +1,7 @@
 package org.example.project.ui
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -63,7 +64,7 @@ fun RecordingStudioScreenContent(
     val cameraPermissionState = rememberPermissionState(Permission.Camera)
     val micPermissionState = rememberPermissionState(Permission.RecordAudio)
     
-    val videoPlugin = rememberVideoRecorderPlugin(config = VideoConfiguration(enableAudio = false))
+    val videoPlugin = rememberVideoRecorderPlugin()
     val cameraState by rememberCameraKState(
         config = CameraConfiguration(cameraLens = CameraLens.FRONT, directory = Directory.DOCUMENTS),
         setupPlugins = { it.attachPlugin(videoPlugin) }
@@ -139,12 +140,26 @@ fun RecordingStudioScreenContent(
                                         fontWeight = FontWeight.Bold
                                     )
                                 } else if (uiState.isRecording || uiState.recordingFinished) {
-                                    TeleprompterText(
-                                        timeBlocks = uiState.timeBlocks,
-                                        elapsedTime = uiState.elapsedTime
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(Color.Black.copy(alpha = 0.5f), shape = MaterialTheme.shapes.medium)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        TeleprompterText(
+                                            timeBlocks = uiState.timeBlocks,
+                                            elapsedTime = uiState.elapsedTime
+                                        )
+                                    }
                                 } else {
-                                    Text("Ready to Record", color = Color.White, fontSize = 24.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .background(Color.Black.copy(alpha = 0.5f), shape = MaterialTheme.shapes.medium)
+                                            .padding(16.dp)
+                                    ) {
+                                        Text("Ready to Record", color = Color.White, fontSize = 24.sp)
+                                    }
                                 }
                             }
 
@@ -157,7 +172,7 @@ fun RecordingStudioScreenContent(
                                 contentAlignment = Alignment.BottomCenter
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    if (uiState.recordingFinished) {
+                                    if (uiState.recordingFinished || uiState.savedVideoPath != null) {
                                         if (uiState.videoError != null) {
                                             Text(
                                                 "Video Recording Failed:\n${uiState.videoError}", 

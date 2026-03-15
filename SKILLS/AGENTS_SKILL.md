@@ -72,6 +72,10 @@ To efficiently extend this codebase:
 
 ## Prompting
 * When I say Execute, that means that I have validated the work and I am ready for you to continue with the GUIDE.md
+* Ensure that the `GUIDE.md` periodically invokes the `CALCULATOR.md` to determine how complete the project is.
+
+* **CRITICAL**: Always begin your response with the current active Phase and Step (if present) from `GUIDE.md` formatted exactly like either `[Phase X - Step Y]` or `[Phase X - Step Y.Z]` or `[Phase X]`. You determine the active phase and step by finding the first unchecked `- [ ]` task in `GUIDE.md` and looking at its parent headers.
+
 
 ## Skills & Best Practices
 For more specific technical guidance (e.g., creating run configs), refer to **`SKILLS.md`**.

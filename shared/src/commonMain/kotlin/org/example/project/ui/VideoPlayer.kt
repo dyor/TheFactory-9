@@ -8,6 +8,8 @@ expect fun VideoPlayer(
     modifier: Modifier = Modifier, 
     url: String,
     seekRequest: Long? = null,
+    isPlaying: Boolean = true,
     onSeekHandled: () -> Unit = {},
-    onTimeUpdate: (Long) -> Unit = {}
+    onTimeUpdate: (Long) -> Unit = {},
+    onCompletion: () -> Unit = {}
 )

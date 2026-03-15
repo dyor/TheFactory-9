@@ -22,14 +22,23 @@ import platform.Foundation.NSURL
 import platform.UIKit.UIViewController
 import org.example.project.domain.resolveVideoPath
 
+import platform.AVFoundation.AVPlayerItemDidPlayToEndTimeNotification
+import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSOperationQueue
+import kotlinx.coroutines.delay
+
+import kotlinx.cinterop.readValue
+
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun VideoPlayer(
     modifier: Modifier, 
     url: String,
     seekRequest: Long?,
+    isPlaying: Boolean,
     onSeekHandled: () -> Unit,
-    onTimeUpdate: (Long) -> Unit
+    onTimeUpdate: (Long) -> Unit,
+    onCompletion: () -> Unit
 ) {
     val player = remember(url) {
         val resolvedUrl = resolveVideoPath(url)
@@ -38,7 +47,20 @@ actual fun VideoPlayer(
         } else {
             NSURL.URLWithString(resolvedUrl)
         }
-        if (nsUrl != null) AVPlayer(uRL = nsUrl) else AVPlayer()
+        val p = if (nsUrl != null) AVPlayer(uRL = nsUrl) else AVPlayer()
+        p
+    }
+
+    DisposableEffect(player) {
+        val observer = NSNotificationCenter.defaultCenter.addObserverForName(
+            AVPlayerItemDidPlayToEndTimeNotification,
+            null,
+            NSOperationQueue.mainQueue,
+            { _ -> onCompletion() }
+        )
+        onDispose {
+            NSNotificationCenter.defaultCenter.removeObserver(observer)
+        }
     }
 
     UIKitViewController(
@@ -46,19 +68,31 @@ actual fun VideoPlayer(
         factory = {
             val controller = AVPlayerViewController()
             controller.player = player
-            // Play automatically when it appears
-            player.play()
+            if (isPlaying) player.play()
             controller
         },
         update = { _ ->
-            // Update logic if needed
+            if (isPlaying) player.play() else player.pause()
         }
     )
 
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) player.play() else player.pause()
+    }
+
     LaunchedEffect(seekRequest) {
         if (seekRequest != null) {
-            player.seekToTime(CMTimeMake(seekRequest, 1000))
+            player.seekToTime(CMTimeMake(seekRequest, 1000), platform.CoreMedia.kCMTimeZero.readValue(), platform.CoreMedia.kCMTimeZero.readValue())
+            delay(200)
             onSeekHandled()
+        }
+    }
+
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            player.play()
+        } else {
+            player.pause()
         }
     }
 

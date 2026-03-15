@@ -307,7 +307,6 @@ fun App(database: AppDatabase? = null) {
                                         viewModel = viewModel,
                                         onBack = {
                                             backStack.removeLast()
-                                            // Make sure we actually go back to RecordingStudio
                                             if (backStack.last() != Screen.RecordingStudio) {
                                                 backStack.add(Screen.RecordingStudio)
                                             }

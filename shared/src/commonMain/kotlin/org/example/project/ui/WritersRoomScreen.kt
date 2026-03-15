@@ -55,6 +55,16 @@ fun WritersRoomScreen(
                     modifier = Modifier.fillMaxWidth().height(120.dp), // Fixed height to prevent infinite expansion
                     maxLines = 4 // Limit visible lines
                 )
+                
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Text("Target Duration: ${uiState.durationSeconds}s", style = MaterialTheme.typography.labelMedium)
+                    Slider(
+                        value = uiState.durationSeconds.toFloat(),
+                        onValueChange = { viewModel.updateDuration(it.toInt()) },
+                        valueRange = 5f..60f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // Generate Script Button
                 val isGeneratePrimary = !hasScriptDraft && !isSaved

@@ -74,8 +74,9 @@ fun PublishingStudioScreen(
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text("Save to Photos & Open YouTube")
+                        Text("Save + Open YouTube")
                     }
+                    Text("Click the button above, then click + icon in YouTube, then click Add (bottom left), and select your video. ")
 
                     Button(
                         onClick = { 

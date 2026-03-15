@@ -12,7 +12,7 @@ import org.example.project.domain.model.Script
 
 @Database(
     entities = [Script::class],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(ScriptStageConverter::class)

@@ -37,10 +37,12 @@ actual class VideoTrimmer actual constructor() {
                     videoTrackIndex = i
                     val outTrackIndex = muxer.addTrack(format)
                     trackMap[i] = outTrackIndex
+                    extractor.selectTrack(i)
                 } else if (mime.startsWith("audio/")) {
                     audioTrackIndex = i
                     val outTrackIndex = muxer.addTrack(format)
                     trackMap[i] = outTrackIndex
+                    extractor.selectTrack(i)
                 }
             }
 
@@ -64,19 +66,16 @@ actual class VideoTrimmer actual constructor() {
             val bufferInfo = MediaCodec.BufferInfo()
 
             var presentationTimeOffsetUs = 0L
+            val lastWrittenTimeUs = mutableMapOf<Int, Long>()
 
             for (segment in segmentsToKeep) {
                 val startUs = segment.startMs * 1000
                 val endUs = segment.endMs * 1000
                 
-                var segmentDurationUs = 0L
-                var firstSampleTimeUs = -1L
+                var segmentStartUs = -1L
+                var maxSegmentDurationUs = 0L
 
-                // Process tracks one by one or concurrently if needed. 
-                // For simplicity, we seek and read until end of segment.
-                // Note: Native Android muxing requires monotonic timestamps per track,
-                // so we must read audio and video interleaved, just like the extractor provides them.
-                
+                // Seek extractor to the nearest keyframe before startUs
                 extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
                 
                 while (true) {
@@ -84,30 +83,36 @@ actual class VideoTrimmer actual constructor() {
                     if (trackIndex < 0) break
 
                     val sampleTimeUs = extractor.sampleTime
-                    if (sampleTimeUs > endUs) break
+                    
+                    // End early if we are cleanly past the segment end
+                    if (sampleTimeUs > endUs) break 
 
-                    if (sampleTimeUs >= startUs) {
-                        if (firstSampleTimeUs == -1L) {
-                            firstSampleTimeUs = sampleTimeUs
-                        }
+                    // Always capture from the first frame returned by seek (which is a keyframe) to avoid corruption
+                    if (segmentStartUs == -1L) {
+                        segmentStartUs = sampleTimeUs
+                    }
 
-                        val size = extractor.readSampleData(buffer, 0)
-                        if (size > 0) {
-                            val outTrackIndex = trackMap[trackIndex]
-                            if (outTrackIndex != null) {
+                    val size = extractor.readSampleData(buffer, 0)
+                    if (size > 0) {
+                        val outTrackIndex = trackMap[trackIndex]
+                        if (outTrackIndex != null) {
+                            val currentSampleOffsetUs = sampleTimeUs - segmentStartUs
+                            val pts = presentationTimeOffsetUs + currentSampleOffsetUs
+                            
+                            val lastPts = lastWrittenTimeUs[outTrackIndex] ?: -1L
+                            
+                            // Ensure strict monotonic timestamps to prevent Muxer crashes
+                            if (pts > lastPts) {
                                 bufferInfo.offset = 0
                                 bufferInfo.size = size
                                 bufferInfo.flags = extractor.sampleFlags
-                                
-                                // Calculate the new presentation time
-                                val currentSampleOffsetUs = sampleTimeUs - firstSampleTimeUs
-                                bufferInfo.presentationTimeUs = presentationTimeOffsetUs + currentSampleOffsetUs
+                                bufferInfo.presentationTimeUs = pts
                                 
                                 muxer.writeSampleData(outTrackIndex, buffer, bufferInfo)
+                                lastWrittenTimeUs[outTrackIndex] = pts
                                 
-                                // Track the max duration of this segment to offset the next one
-                                if (currentSampleOffsetUs > segmentDurationUs) {
-                                    segmentDurationUs = currentSampleOffsetUs
+                                if (currentSampleOffsetUs > maxSegmentDurationUs) {
+                                    maxSegmentDurationUs = currentSampleOffsetUs
                                 }
                             }
                         }
@@ -115,8 +120,7 @@ actual class VideoTrimmer actual constructor() {
                     extractor.advance()
                 }
                 
-                // Add the duration of this segment to the overall offset for the next segment
-                presentationTimeOffsetUs += segmentDurationUs + 10000 // Add small 10ms gap between segments
+                presentationTimeOffsetUs += maxSegmentDurationUs + 10000 // Add small 10ms gap
             }
 
             muxer.stop()
