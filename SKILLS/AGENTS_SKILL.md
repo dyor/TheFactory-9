@@ -71,11 +71,9 @@ To efficiently extend this codebase:
 *   **Responsive UI:** Use `Box(contentAlignment = Alignment.Center)` with `widthIn(max = 600.dp)` for main content to support broader screens if needed.
 
 ## Prompting
-* When I say Execute, that means that I have validated the work and I am ready for you to continue with the GUIDE.md
+* When I say "Execute", that means that I have validated the work and I am ready for you to continue with the `GUIDE.md`.
 * Ensure that the `GUIDE.md` periodically invokes the `CALCULATOR.md` to determine how complete the project is.
-
 * **CRITICAL**: Always begin your response with the current active Phase and Step (if present) from `GUIDE.md` formatted exactly like either `[Phase X - Step Y]` or `[Phase X - Step Y.Z]` or `[Phase X]`. You determine the active phase and step by finding the first unchecked `- [ ]` task in `GUIDE.md` and looking at its parent headers.
 
-
 ## Skills & Best Practices
-For more specific technical guidance (e.g., creating run configs), refer to **`SKILLS.md`**.
+For more specific technical guidance (e.g., creating run configs, working with Room, Navigation, and complex Video Playback components like `AndroidView` and iOS Sandbox UUID resolution), heavily refer to the `SKILL.md` (or `SKILLS/SKILL_SKILL.md` documentation). It contains vital workarounds for multiplatform video clipping and rendering.

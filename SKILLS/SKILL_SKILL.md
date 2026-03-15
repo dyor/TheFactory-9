@@ -270,3 +270,22 @@ As KMP and Compose Multiplatform are rapidly evolving, refer to these primary so
 *   **KMP App Template Repository**: [https://github.com/Kotlin/KMP-App-Template](https://github.com/Kotlin/KMP-App-Template) - Maintained by JetBrains, this is the gold standard for current architecture and dependencies.
     *   *Navigation 3 Migration PR*: [https://github.com/Kotlin/KMP-App-Template/pull/62/changes](https://github.com/Kotlin/KMP-App-Template/pull/62/changes) - Excellent reference for exact dependency coordinates, imports, and polymorphic serialization setup used in our project.
 *   **Compose Multiplatform Releases**: [https://github.com/JetBrains/compose-multiplatform/releases](https://github.com/JetBrains/compose-multiplatform/releases) - Check here for version compatibility between Kotlin and Compose.
+
+## 4. Video Playback & Editing (KMP)
+Working with Native Video (especially `VideoTrimmer` and `VideoPlayer`) requires strict adherence to native API limitations to avoid crashes.
+
+*   **AndroidView & Recomposition Bug (CRITICAL)**:
+    *   **Problem**: You get "Can't play this video" or continuous video reloading when modifying state elsewhere on the screen.
+    *   **Solution**: `AndroidView`'s `update = { ... }` block runs on *every single recomposition*. Do NOT put `videoView.setVideoURI()` inside the `update` block, otherwise the player resets from scratch repeatedly. Instead, leave the `update` block empty and use `LaunchedEffect(url)` and `LaunchedEffect(seekRequest)` to control the VideoView asynchronously.
+*   **iOS Sandbox UUID Mapping**:
+    *   **Problem**: Video trimmer fails with "requested URL was not found on this server" after rebuilding the iOS app.
+    *   **Solution**: The iOS App Sandbox UUID changes on every fresh build. If you store absolute file paths (e.g. to `Documents` or `tmp`), they become invalid. You MUST parse the filename and prepend the current `NSTemporaryDirectory()` or `NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, ...)` every time you resolve a path before playback or trimming.
+*   **Android `MediaMuxer` Corrupt Output**:
+    *   **Problem**: Trimming results in a corrupted MP4 file that throws "Can't play this video" in the Publishing Studio.
+    *   **Solution**: Android's `MediaMuxer` requires *strictly monotonic* timestamps. When reading interleaved audio/video from `MediaExtractor`, timestamps can jitter backwards. Maintain a `val lastWrittenTimeUs = mutableMapOf<Int, Long>()` and only `writeSampleData` if `pts > lastPts`.
+*   **iOS `AVAssetExportSession` Silent Failures**:
+    *   **Problem**: Native iOS trimming completes instantly but returns `false` or fails.
+    *   **Solution**: Do NOT use `AVAssetExportPresetHighestQuality` if stitching segmented slices, as slight encoding differences cause failures. Always use `AVAssetExportPresetPassthrough` to slice and copy frames without re-encoding.
+*   **Async Seek Debouncing**:
+    *   **Problem**: The UI jumps back and forth infinitely when seeking the video via state updates.
+    *   **Solution**: `seekToTime` on iOS and `seekTo` on Android are asynchronous. The video's time observer loop will continue to fire old timestamps *after* you request a seek. Add a `delay(200)` inside the `LaunchedEffect(seekRequest)` right after the native seek command to debounce the old callbacks before you listen to `onTimeUpdate` again.
